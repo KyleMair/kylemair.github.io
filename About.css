@@ -1,0 +1,16 @@
+/* src/components/About.css */
+.about {
+  background-color: #87aeb8;
+  text-align: center;
+}
+
+.about h2 {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.about p {
+  font-size: 1.2rem;
+  width: 70%;
+  margin: 0 auto;
+}
