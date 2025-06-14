@@ -1,2 +1,0 @@
-# Kyle Mair | Portfolio
-Welcome!
