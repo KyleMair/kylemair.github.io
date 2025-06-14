@@ -1,2 +1,2 @@
-# portfoliosite
-Repo for Kyle Mairs Portfolio
+# Kyle Mair | Portfolio
+Welcome!
