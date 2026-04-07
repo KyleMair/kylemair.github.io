@@ -150,7 +150,7 @@
         </div>
         <div class="col">
           <label>Baseline tickets/day</label>
-          <input type="number" id="baseline" value="835" min="1" max="10000" style="width:110px;" />
+          <input type="number" id="baseline" value="911" min="1" max="10000" style="width:110px;" />
         </div>
       </div>
     </div>
@@ -357,9 +357,20 @@
       }
       if (data.length > 10) {
         uploadedData = data;
-        var avg = Math.round(data.reduce(function(s,d){return s+d.tickets;},0) / data.length);
-        document.getElementById('baseline').value = avg;
-        document.getElementById('dataStatus').textContent = 'Loaded ' + data.length + ' days of data. Avg ' + avg + ' tickets/day.';
+        // Calculate deseasonalised baseline by stripping out dow and monthly multipliers
+        var monthMult = [0.766, 0.727, 0.873, 0.983, 1.215, 1.255, 1.223, 1.099, 1.219, 1.048, 1.237, 0.962];
+        var dowMult   = [0.631, 0.847, 1.088, 1.065, 1.020, 0.986, 0.783]; // 0=Sun..6=Sat
+        var total = 0;
+        data.forEach(function(row) {
+          var d = new Date(row.date);
+          var mMult = monthMult[d.getMonth()];
+          var dMult = dowMult[d.getDay()];
+          total += row.tickets / (mMult * dMult);
+        });
+        var baseline = Math.round(total / data.length);
+        document.getElementById('baseline').value = baseline;
+        var simpleAvg = Math.round(data.reduce(function(s,d){return s+d.tickets;},0) / data.length);
+        document.getElementById('dataStatus').textContent = 'Loaded ' + data.length + ' days of data. Deseasonalised baseline: ' + baseline + ' tickets/day (simple avg: ' + simpleAvg + ').';
         document.getElementById('dataStatus').className = 'data-status status-ok';
       } else {
         document.getElementById('dataStatus').textContent = 'Could not parse CSV. Make sure it has date and tickets columns.';
