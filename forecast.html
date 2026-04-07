@@ -1,59 +1,121 @@
-
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font-sans); }
-  .container { padding: 1.5rem 0; }
-  h2 { font-size: 18px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
-  .subtitle { font-size: 14px; color: var(--color-text-secondary); margin-bottom: 1.5rem; }
-  .section { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
-  .section-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 1rem; }
-  .form-row { display: flex; gap: 12px; align-items: flex-end; margin-bottom: 10px; flex-wrap: wrap; }
-  label { font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 4px; }
-  input[type="text"], input[type="date"], input[type="number"], select {
-    font-size: 13px; padding: 6px 10px; border-radius: var(--border-radius-md);
-    border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary);
-    color: var(--color-text-primary); min-width: 120px;
-  }
-  .btn { font-size: 13px; padding: 6px 14px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-primary); cursor: pointer; }
-  .btn:hover { background: var(--color-background-secondary); }
-  .btn-primary { background: var(--color-text-primary); color: var(--color-background-primary); border-color: var(--color-text-primary); }
-  .btn-primary:hover { opacity: 0.85; }
-  .btn-sm { font-size: 12px; padding: 4px 10px; }
-  .btn-danger { color: var(--color-text-danger); border-color: var(--color-border-danger); }
-  .btn-danger:hover { background: var(--color-background-danger); }
-  .tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 10px; border-radius: 100px; margin: 3px; }
-  .tag-product { background: #E6F1FB; color: #0C447C; }
-  .tag-holiday { background: #EAF3DE; color: #27500A; }
-  .tag-sale { background: #FAEEDA; color: #633806; }
-  .tag-remove { cursor: pointer; opacity: 0.6; font-size: 14px; line-height: 1; }
-  .tag-remove:hover { opacity: 1; }
-  .tabs { display: flex; gap: 2px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 3px; margin-bottom: 1rem; width: fit-content; }
-  .tab { font-size: 13px; padding: 5px 14px; border-radius: 6px; cursor: pointer; color: var(--color-text-secondary); border: none; background: none; }
-  .tab.active { background: var(--color-background-primary); color: var(--color-text-primary); font-weight: 500; box-shadow: 0 0 0 0.5px var(--color-border-tertiary); }
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .metric { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 1rem; }
-  .metric-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; }
-  .metric-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
-  .metric-sub { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
-  .chart-wrap { position: relative; height: 260px; margin-top: 1rem; }
-  .upload-area { border: 1px dashed var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 1.5rem; text-align: center; cursor: pointer; }
-  .upload-area:hover { background: var(--color-background-secondary); }
-  .upload-text { font-size: 13px; color: var(--color-text-secondary); }
-  .upload-hint { font-size: 12px; color: var(--color-text-tertiary); margin-top: 4px; }
-  #fileInput { display: none; }
-  .data-status { font-size: 13px; padding: 8px 12px; border-radius: var(--border-radius-md); margin-top: 8px; }
-  .status-ok { background: var(--color-background-success); color: var(--color-text-success); }
-  .status-demo { background: var(--color-background-info); color: var(--color-text-info); }
-  .event-list { display: flex; flex-wrap: wrap; margin-top: 8px; min-height: 28px; }
-  .divider { height: 0.5px; background: var(--color-border-tertiary); margin: 1rem 0; }
-  .col { display: flex; flex-direction: column; gap: 4px; }
-  .forecast-note { font-size: 12px; color: var(--color-text-secondary); margin-top: 8px; }
-  @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } .form-row { flex-direction: column; align-items: stretch; } }
-</style>
-
-<div class="container">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Support Ticket Forecaster</title>
+  <style>
+    :root {
+      --color-background-primary: #ffffff;
+      --color-background-secondary: #f5f4f0;
+      --color-background-tertiary: #eeecea;
+      --color-background-info: #e6f1fb;
+      --color-background-success: #eaf3de;
+      --color-background-warning: #faeeda;
+      --color-background-danger: #fcebeb;
+      --color-text-primary: #1a1a18;
+      --color-text-secondary: #5f5e5a;
+      --color-text-tertiary: #888780;
+      --color-text-info: #0c447c;
+      --color-text-success: #27500a;
+      --color-text-warning: #633806;
+      --color-text-danger: #791f1f;
+      --color-border-tertiary: rgba(26,26,24,0.15);
+      --color-border-secondary: rgba(26,26,24,0.3);
+      --color-border-primary: rgba(26,26,24,0.4);
+      --color-border-info: #185fa5;
+      --border-radius-md: 8px;
+      --border-radius-lg: 12px;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-background-primary: #1e1e1c;
+        --color-background-secondary: #2a2a28;
+        --color-background-tertiary: #141412;
+        --color-background-info: #042c53;
+        --color-background-success: #173404;
+        --color-background-warning: #412402;
+        --color-background-danger: #501313;
+        --color-text-primary: #f0ede8;
+        --color-text-secondary: #b4b2a9;
+        --color-text-tertiary: #888780;
+        --color-text-info: #b5d4f4;
+        --color-text-success: #c0dd97;
+        --color-text-warning: #fac775;
+        --color-text-danger: #f7c1c1;
+        --color-border-tertiary: rgba(240,237,232,0.15);
+        --color-border-secondary: rgba(240,237,232,0.3);
+        --color-border-primary: rgba(240,237,232,0.4);
+        --color-border-info: #378add;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-sans); background: var(--color-background-tertiary); color: var(--color-text-primary); min-height: 100vh; padding: 2rem 1rem; }
+    .page-wrap { max-width: 760px; margin: 0 auto; }
+    h2 { font-size: 18px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+    .subtitle { font-size: 14px; color: var(--color-text-secondary); margin-bottom: 1.5rem; }
+    .section { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+    .section-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 1rem; }
+    .form-row { display: flex; gap: 12px; align-items: flex-end; margin-bottom: 10px; flex-wrap: wrap; }
+    label { font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 4px; }
+    input[type="text"], input[type="date"], input[type="number"], select {
+      font-size: 13px; padding: 6px 10px; border-radius: var(--border-radius-md);
+      border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary);
+      color: var(--color-text-primary); min-width: 120px; outline: none;
+    }
+    input:focus, select:focus { box-shadow: 0 0 0 2px var(--color-border-info); }
+    .btn { font-size: 13px; padding: 6px 14px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-primary); cursor: pointer; font-family: var(--font-sans); }
+    .btn:hover { background: var(--color-background-secondary); }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--color-text-primary); color: var(--color-background-primary); border-color: var(--color-text-primary); }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-sm { font-size: 12px; padding: 4px 10px; }
+    .tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 10px; border-radius: 100px; margin: 3px; }
+    .tag-product { background: #e6f1fb; color: #0c447c; }
+    .tag-holiday { background: #eaf3de; color: #27500a; }
+    .tag-sale { background: #faeeda; color: #633806; }
+    .tag-remove { cursor: pointer; opacity: 0.6; font-size: 14px; line-height: 1; }
+    .tag-remove:hover { opacity: 1; }
+    .tabs { display: flex; gap: 2px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 3px; margin-bottom: 1rem; width: fit-content; }
+    .tab { font-size: 13px; padding: 5px 14px; border-radius: 6px; cursor: pointer; color: var(--color-text-secondary); border: none; background: none; font-family: var(--font-sans); }
+    .tab.active { background: var(--color-background-primary); color: var(--color-text-primary); font-weight: 500; box-shadow: 0 0 0 0.5px var(--color-border-tertiary); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .metric { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 1rem; }
+    .metric-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; }
+    .metric-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+    .chart-wrap { position: relative; height: 260px; margin-top: 1rem; }
+    .upload-area { border: 1px dashed var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 1.5rem; text-align: center; cursor: pointer; }
+    .upload-area:hover { background: var(--color-background-secondary); }
+    .upload-text { font-size: 13px; color: var(--color-text-secondary); }
+    .upload-hint { font-size: 12px; color: var(--color-text-tertiary); margin-top: 4px; }
+    #fileInput { display: none; }
+    .data-status { font-size: 13px; padding: 8px 12px; border-radius: var(--border-radius-md); margin-top: 8px; }
+    .status-ok { background: var(--color-background-success); color: var(--color-text-success); }
+    .status-demo { background: var(--color-background-info); color: var(--color-text-info); }
+    .event-list { display: flex; flex-wrap: wrap; margin-top: 8px; min-height: 28px; }
+    .col { display: flex; flex-direction: column; gap: 4px; }
+    .forecast-note { font-size: 12px; color: var(--color-text-secondary); margin-top: 8px; }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0; }
+    .toggle-label { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+    .toggle-wrap { display: flex; align-items: center; gap: 8px; }
+    .toggle-status { font-size: 12px; color: var(--color-text-tertiary); }
+    .toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track { position: absolute; inset: 0; background: var(--color-background-tertiary); border: 0.5px solid var(--color-border-secondary); border-radius: 100px; cursor: pointer; transition: background 0.2s; }
+    .toggle input:checked + .toggle-track { background: #185fa5; border-color: #185fa5; }
+    .toggle-track::after { content: ''; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #fff; top: 2px; left: 2px; transition: transform 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+    .toggle input:checked + .toggle-track::after { transform: translateX(16px); }
+    .event-body { margin-top: 1rem; padding-top: 1rem; border-top: 0.5px solid var(--color-border-tertiary); }
+    .section.disabled { opacity: 0.45; pointer-events: none; }
+    .section.disabled .toggle-row { pointer-events: all; opacity: 1; }
+    @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } .form-row { flex-direction: column; align-items: stretch; } }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
   <h2>Support ticket forecaster</h2>
-  <p class="subtitle">Prophet-powered forecasting with product launches, holidays & sale events</p>
+  <p class="subtitle">Forecast inbound tickets with automatic seasonality, holidays, and optional event modifiers</p>
 
   <div class="tabs">
     <button class="tab active" onclick="showTab('data')">1. Data</button>
@@ -66,13 +128,14 @@
     <div class="section">
       <div class="section-title">Upload historical ticket data</div>
       <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-        <div style="font-size: 24px; margin-bottom: 8px; color: var(--color-text-secondary);">↑</div>
+        <div style="font-size:24px;margin-bottom:8px;color:var(--color-text-secondary);">&#8593;</div>
         <div class="upload-text">Click to upload CSV</div>
-        <div class="upload-hint">Expected columns: date, tickets — e.g. 2024-01-15, 142</div>
+        <div class="upload-hint">Expected columns: date, tickets &mdash; e.g. 2024-01-15, 142</div>
       </div>
       <input type="file" id="fileInput" accept=".csv" onchange="handleFileUpload(event)" />
       <div id="dataStatus" class="data-status status-demo">Using demo data (2 years of synthetic ecommerce ticket history)</div>
     </div>
+
     <div class="section">
       <div class="section-title">Forecast settings</div>
       <div class="form-row">
@@ -86,6 +149,20 @@
           </select>
         </div>
         <div class="col">
+          <label>Baseline tickets/day</label>
+          <input type="number" id="baseline" value="120" min="1" max="10000" style="width:110px;" />
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Automatic modifiers <span style="font-size:12px;font-weight:400;color:var(--color-text-tertiary);">— always applied</span></div>
+      <div class="form-row">
+        <div class="col"><label>Weekend dip (%)</label><input type="number" id="weekendDip" value="22" min="0" max="80" style="width:100px;" /></div>
+        <div class="col"><label>Nov/Dec uplift (%)</label><input type="number" id="seasonalLift" value="12" min="0" max="100" style="width:100px;" /></div>
+      </div>
+      <div class="form-row">
+        <div class="col">
           <label>Country holidays</label>
           <select id="country">
             <option value="US">United States</option>
@@ -95,55 +172,78 @@
             <option value="none">None</option>
           </select>
         </div>
-        <div class="col">
-          <label>Baseline tickets/day</label>
-          <input type="number" id="baseline" value="120" min="1" max="10000" style="width:110px;" />
-        </div>
+        <div class="col"><label>Volume on holidays (%)</label><input type="number" id="holidayReduction" value="65" min="0" max="150" style="width:110px;" /></div>
       </div>
     </div>
-    <button class="btn btn-primary" onclick="showTab('events')">Next: add events →</button>
+
+    <button class="btn btn-primary" onclick="showTab('events')">Next: add events &rarr;</button>
   </div>
 
   <!-- TAB 2: EVENTS -->
   <div id="tab-events" style="display:none;">
-    <div class="section">
-      <div class="section-title">Product releases</div>
-      <div class="form-row">
-        <div class="col"><label>Product name</label><input type="text" id="prodName" placeholder="e.g. Summer Collection" style="width:180px;" /></div>
-        <div class="col"><label>Launch date</label><input type="date" id="prodDate" /></div>
-        <div class="col"><label>Expected spike (%)</label><input type="number" id="prodSpike" value="35" min="0" max="300" style="width:90px;" /></div>
-        <div class="col"><label>Duration (days)</label><input type="number" id="prodDuration" value="7" min="1" max="30" style="width:90px;" /></div>
-        <button class="btn btn-sm" onclick="addEvent('product')" style="margin-bottom:0;">+ Add</button>
+
+    <div class="section" id="section-product">
+      <div class="toggle-row">
+        <div class="toggle-label">Product releases</div>
+        <div class="toggle-wrap">
+          <span class="toggle-status" id="status-product">Off</span>
+          <label class="toggle"><input type="checkbox" id="tog-product" onchange="toggleSection('product')" /><span class="toggle-track"></span></label>
+        </div>
       </div>
-      <div class="event-list" id="product-tags"></div>
+      <div id="body-product" class="event-body">
+        <div class="form-row">
+          <div class="col"><label>Product name</label><input type="text" id="prodName" placeholder="e.g. Summer Collection" style="width:180px;" /></div>
+          <div class="col"><label>Launch date</label><input type="date" id="prodDate" /></div>
+          <div class="col"><label>Spike (%)</label><input type="number" id="prodSpike" value="35" min="0" max="300" style="width:90px;" /></div>
+          <div class="col"><label>Duration (days)</label><input type="number" id="prodDuration" value="7" min="1" max="30" style="width:90px;" /></div>
+          <button class="btn btn-sm" onclick="addEvent('product')" style="margin-bottom:0;">+ Add</button>
+        </div>
+        <div class="event-list" id="product-tags"></div>
+      </div>
     </div>
 
-    <div class="section">
-      <div class="section-title">Sale periods</div>
-      <div class="form-row">
-        <div class="col"><label>Sale name</label><input type="text" id="saleName" placeholder="e.g. Black Friday" style="width:160px;" /></div>
-        <div class="col"><label>Start date</label><input type="date" id="saleStart" /></div>
-        <div class="col"><label>End date</label><input type="date" id="saleEnd" /></div>
-        <div class="col"><label>Spike (%)</label><input type="number" id="saleSpike" value="80" min="0" max="500" style="width:90px;" /></div>
-        <button class="btn btn-sm" onclick="addEvent('sale')" style="margin-bottom:0;">+ Add</button>
+    <div class="section" id="section-sale">
+      <div class="toggle-row">
+        <div class="toggle-label">Sale periods</div>
+        <div class="toggle-wrap">
+          <span class="toggle-status" id="status-sale">Off</span>
+          <label class="toggle"><input type="checkbox" id="tog-sale" onchange="toggleSection('sale')" /><span class="toggle-track"></span></label>
+        </div>
       </div>
-      <div class="event-list" id="sale-tags"></div>
+      <div id="body-sale" class="event-body">
+        <div class="form-row">
+          <div class="col"><label>Sale name</label><input type="text" id="saleName" placeholder="e.g. Black Friday" style="width:160px;" /></div>
+          <div class="col"><label>Start date</label><input type="date" id="saleStart" /></div>
+          <div class="col"><label>End date</label><input type="date" id="saleEnd" /></div>
+          <div class="col"><label>Spike (%)</label><input type="number" id="saleSpike" value="80" min="0" max="500" style="width:90px;" /></div>
+          <button class="btn btn-sm" onclick="addEvent('sale')" style="margin-bottom:0;">+ Add</button>
+        </div>
+        <div class="event-list" id="sale-tags"></div>
+      </div>
     </div>
 
-    <div class="section">
-      <div class="section-title">Custom holidays / closures</div>
-      <div class="form-row">
-        <div class="col"><label>Event name</label><input type="text" id="holidayName" placeholder="e.g. Company closure" style="width:170px;" /></div>
-        <div class="col"><label>Date</label><input type="date" id="holidayDate" /></div>
-        <div class="col"><label>Volume change (%)</label><input type="number" id="holidaySpike" value="-20" min="-100" max="200" style="width:100px;" /></div>
-        <button class="btn btn-sm" onclick="addEvent('holiday')" style="margin-bottom:0;">+ Add</button>
+    <div class="section" id="section-custholiday">
+      <div class="toggle-row">
+        <div class="toggle-label">Custom holidays / closures</div>
+        <div class="toggle-wrap">
+          <span class="toggle-status" id="status-custholiday">Off</span>
+          <label class="toggle"><input type="checkbox" id="tog-custholiday" onchange="toggleSection('custholiday')" /><span class="toggle-track"></span></label>
+        </div>
       </div>
-      <div class="event-list" id="holiday-tags"></div>
+      <div id="body-custholiday" class="event-body">
+        <div class="form-row">
+          <div class="col"><label>Event name</label><input type="text" id="holidayName" placeholder="e.g. Company closure" style="width:170px;" /></div>
+          <div class="col"><label>Date</label><input type="date" id="holidayDate" /></div>
+          <div class="col"><label>Volume change (%)</label><input type="number" id="holidaySpike" value="-20" min="-100" max="200" style="width:100px;" /></div>
+          <button class="btn btn-sm" onclick="addEvent('holiday')" style="margin-bottom:0;">+ Add</button>
+        </div>
+        <div class="event-list" id="holiday-tags"></div>
+      </div>
     </div>
 
-    <div style="display:flex; gap:8px; margin-top:4px;">
-      <button class="btn" onclick="showTab('data')">← Back</button>
-      <button class="btn btn-primary" onclick="runForecast()">Run forecast ↗</button>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn" onclick="showTab('data')">&larr; Back</button>
+      <button class="btn btn-primary" onclick="runForecast()">Run forecast &rarr;</button>
     </div>
   </div>
 
@@ -155,63 +255,84 @@
       <div class="metric"><div class="metric-label">Peak date</div><div class="metric-value" id="m-peakdate" style="font-size:16px;">—</div></div>
       <div class="metric"><div class="metric-label">Total forecast period</div><div class="metric-value" id="m-total">—</div></div>
     </div>
-
     <div class="section">
       <div class="section-title">Daily ticket forecast</div>
       <div class="chart-wrap"><canvas id="forecastChart"></canvas></div>
       <p class="forecast-note" id="forecastNote"></p>
     </div>
-
     <div class="section">
       <div class="section-title">Event impact summary</div>
-      <div id="eventSummary" style="font-size:13px; color: var(--color-text-secondary);">No events added.</div>
+      <div id="eventSummary" style="font-size:13px;color:var(--color-text-secondary);">No events added.</div>
     </div>
-
-    <div style="display:flex; gap:8px; margin-top:4px; flex-wrap:wrap;">
-      <button class="btn" onclick="showTab('events')">← Edit events</button>
-      <button class="btn" onclick="sendPrompt('How should I staff my support team based on this ticket forecast?')">How to staff for this forecast ↗</button>
-      <button class="btn" onclick="sendPrompt('What are common causes of ticket spikes during product launches for ecommerce companies?')">What drives launch spikes ↗</button>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn" onclick="showTab('events')">&larr; Edit events</button>
     </div>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
-  const events = { product: [], sale: [], holiday: [] };
-  let uploadedData = null;
-  let chartInstance = null;
+  var events = { product: [], sale: [], holiday: [] };
+  var toggles = { product: false, sale: false, custholiday: false };
+  var uploadedData = null;
+  var chartInstance = null;
+
+  function initToggles() {
+    ['product','sale','custholiday'].forEach(function(name) {
+      var body = document.getElementById('body-' + name);
+      var section = document.getElementById('section-' + name);
+      if (body) body.style.display = 'none';
+      if (section) section.classList.add('disabled');
+    });
+  }
+
+  function toggleSection(name) {
+    var cb = document.getElementById('tog-' + name);
+    toggles[name] = cb.checked;
+    var status = document.getElementById('status-' + name);
+    if (status) status.textContent = cb.checked ? 'On' : 'Off';
+    var section = document.getElementById('section-' + name);
+    var body = document.getElementById('body-' + name);
+    if (section && body) {
+      if (cb.checked) { section.classList.remove('disabled'); body.style.display = ''; }
+      else { section.classList.add('disabled'); body.style.display = 'none'; }
+    }
+  }
 
   function showTab(name) {
-    ['data','events','forecast'].forEach(t => {
+    ['data','events','forecast'].forEach(function(t) {
       document.getElementById('tab-'+t).style.display = t === name ? '' : 'none';
     });
-    document.querySelectorAll('.tab').forEach((el, i) => {
+    document.querySelectorAll('.tab').forEach(function(el, i) {
       el.classList.toggle('active', ['data','events','forecast'][i] === name);
     });
   }
 
   function addEvent(type) {
-    let name, date, spike, duration, endDate;
+    var name, date, spike, duration, endDate;
     if (type === 'product') {
+      if (!toggles.product) return;
       name = document.getElementById('prodName').value.trim();
       date = document.getElementById('prodDate').value;
       spike = parseFloat(document.getElementById('prodSpike').value);
       duration = parseInt(document.getElementById('prodDuration').value);
       if (!name || !date) return;
-      events.product.push({ name, date, spike, duration });
+      events.product.push({ name: name, date: date, spike: spike, duration: duration });
     } else if (type === 'sale') {
+      if (!toggles.sale) return;
       name = document.getElementById('saleName').value.trim();
       date = document.getElementById('saleStart').value;
       endDate = document.getElementById('saleEnd').value;
       spike = parseFloat(document.getElementById('saleSpike').value);
       if (!name || !date || !endDate) return;
-      events.sale.push({ name, date, endDate, spike });
+      events.sale.push({ name: name, date: date, endDate: endDate, spike: spike });
     } else {
+      if (!toggles.custholiday) return;
       name = document.getElementById('holidayName').value.trim();
       date = document.getElementById('holidayDate').value;
       spike = parseFloat(document.getElementById('holidaySpike').value);
       if (!name || !date) return;
-      events.holiday.push({ name, date, spike });
+      events.holiday.push({ name: name, date: date, spike: spike });
     }
     renderTags(type);
   }
@@ -222,34 +343,36 @@
   }
 
   function renderTags(type) {
-    const cls = { product: 'tag-product', sale: 'tag-sale', holiday: 'tag-holiday' };
-    const labels = { product: e => `${e.name} +${e.spike}%`, sale: e => `${e.name} +${e.spike}%`, holiday: e => `${e.name} ${e.spike > 0 ? '+' : ''}${e.spike}%` };
-    const container = document.getElementById(type + '-tags');
-    container.innerHTML = events[type].map((e, i) =>
-      `<span class="tag ${cls[type]}">${labels[type](e)}<span class="tag-remove" onclick="removeEvent('${type}',${i})">×</span></span>`
-    ).join('');
+    var cls = { product: 'tag-product', sale: 'tag-sale', holiday: 'tag-holiday' };
+    function lbl(t, e) {
+      return t === 'holiday' ? e.name + ' ' + (e.spike > 0 ? '+' : '') + e.spike + '%' : e.name + ' +' + e.spike + '%';
+    }
+    var container = document.getElementById(type + '-tags');
+    container.innerHTML = events[type].map(function(e, i) {
+      return '<span class="tag ' + cls[type] + '">' + lbl(type, e) +
+        '<span class="tag-remove" onclick="removeEvent(\'' + type + '\',' + i + ')">&#215;</span></span>';
+    }).join('');
   }
 
-  function handleFileUpload(event) {
-    const file = event.target.files[0];
+  function handleFileUpload(evt) {
+    var file = evt.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
+    var reader = new FileReader();
     reader.onload = function(e) {
-      const lines = e.target.result.trim().split('\n');
-      const data = [];
-      for (let i = 1; i < lines.length; i++) {
-        const parts = lines[i].split(',');
+      var lines = e.target.result.trim().split('\n');
+      var data = [];
+      for (var i = 1; i < lines.length; i++) {
+        var parts = lines[i].split(',');
         if (parts.length >= 2) {
-          const date = parts[0].trim();
-          const tickets = parseInt(parts[1].trim());
-          if (!isNaN(tickets)) data.push({ date, tickets });
+          var dd = parts[0].trim(), tt = parseInt(parts[1].trim());
+          if (!isNaN(tt)) data.push({ date: dd, tickets: tt });
         }
       }
       if (data.length > 10) {
         uploadedData = data;
-        const avg = Math.round(data.reduce((s, d) => s + d.tickets, 0) / data.length);
+        var avg = Math.round(data.reduce(function(s,d){return s+d.tickets;},0) / data.length);
         document.getElementById('baseline').value = avg;
-        document.getElementById('dataStatus').textContent = `Loaded ${data.length} days of data. Avg ${avg} tickets/day.`;
+        document.getElementById('dataStatus').textContent = 'Loaded ' + data.length + ' days of data. Avg ' + avg + ' tickets/day.';
         document.getElementById('dataStatus').className = 'data-status status-ok';
       } else {
         document.getElementById('dataStatus').textContent = 'Could not parse CSV. Make sure it has date and tickets columns.';
@@ -258,169 +381,128 @@
     reader.readAsText(file);
   }
 
-  function generateDemoData(days, baseline) {
-    const data = [];
-    const start = new Date(); start.setDate(start.getDate() - days);
-    for (let i = 0; i < days; i++) {
-      const d = new Date(start); d.setDate(d.getDate() + i);
-      const dow = d.getDay();
-      const weekendDip = (dow === 0 || dow === 6) ? 0.75 : 1;
-      const trend = 1 + (i / days) * 0.1;
-      const noise = 0.85 + Math.random() * 0.3;
-      const seasonal = 1 + 0.15 * Math.sin((i / 365) * 2 * Math.PI);
-      data.push({ date: d.toISOString().split('T')[0], tickets: Math.round(baseline * weekendDip * trend * noise * seasonal) });
-    }
-    return data;
-  }
-
-  const US_HOLIDAYS = {
-    'New Year\'s Day': [1, 1],
-    'Memorial Day': 'last-mon-may',
-    'Independence Day': [7, 4],
-    'Labor Day': 'first-mon-sep',
-    'Thanksgiving': 'fourth-thu-nov',
-    'Christmas': [12, 25],
-  };
-
   function getHolidayDates(year, country) {
-    const holidays = [];
-    if (country === 'none') return holidays;
-    const defs = {
-      US: [[1,1],[7,4],[12,25],[12,26],[11,11]],
-      UK: [[1,1],[12,25],[12,26],[4,1]],
+    var defs = {
+      US: [[1,1],[7,4],[11,11],[12,25],[12,26]],
+      UK: [[1,1],[4,1],[12,25],[12,26]],
       CA: [[1,1],[7,1],[12,25],[12,26]],
-      AU: [[1,1],[1,26],[12,25],[12,26]],
+      AU: [[1,1],[1,26],[12,25],[12,26]]
     };
-    const list = defs[country] || [];
-    list.forEach(([m, d]) => {
-      holidays.push(`${year}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+    return (defs[country] || []).map(function(md) {
+      return year + '-' + String(md[0]).padStart(2,'0') + '-' + String(md[1]).padStart(2,'0');
     });
-    return holidays;
   }
 
   function runForecast() {
     showTab('forecast');
-    const horizon = parseInt(document.getElementById('horizon').value);
-    const baseline = parseInt(document.getElementById('baseline').value) || 120;
-    const country = document.getElementById('country').value;
+    var horizon = parseInt(document.getElementById('horizon').value);
+    var baseline = parseInt(document.getElementById('baseline').value) || 120;
+    var country = document.getElementById('country').value;
+    var weekendDipPct = parseFloat(document.getElementById('weekendDip').value) / 100;
+    var seasonalLift = parseFloat(document.getElementById('seasonalLift').value) / 100;
+    var holidayMult = parseFloat(document.getElementById('holidayReduction').value) / 100;
 
-    const today = new Date();
-    const labels = [], values = [], colors = [], eventMarkers = {};
+    var today = new Date();
+    var labels = [], values = [], colors = [], eventMarkers = {};
+    var nextYear = today.getFullYear() + 1;
+    var holidays = country !== 'none'
+      ? getHolidayDates(today.getFullYear(), country).concat(getHolidayDates(nextYear, country))
+      : [];
 
-    const nextYear = today.getFullYear() + 1;
-    const holidays = [...getHolidayDates(today.getFullYear(), country), ...getHolidayDates(nextYear, country)];
-
-    for (let i = 0; i < horizon; i++) {
-      const d = new Date(today); d.setDate(d.getDate() + i);
-      const ds = d.toISOString().split('T')[0];
+    for (var i = 0; i < horizon; i++) {
+      var d = new Date(today); d.setDate(d.getDate() + i);
+      var ds = d.toISOString().split('T')[0];
       labels.push(ds);
 
-      let multiplier = 1;
-      const dow = d.getDay();
-      if (dow === 0 || dow === 6) multiplier *= 0.78;
+      var mult = 1;
+      var dow = d.getDay();
+      if (dow === 0 || dow === 6) mult *= (1 - weekendDipPct);
+      mult *= (0.93 + Math.random() * 0.14);
+      var month = d.getMonth() + 1;
+      if (month === 11 || month === 12) mult *= (1 + seasonalLift);
 
-      const noise = 0.93 + Math.random() * 0.14;
-      multiplier *= noise;
+      var color = '#378ADD', eventLabel = '';
 
-      const month = d.getMonth() + 1;
-      if (month === 11 || month === 12) multiplier *= 1.12;
-
-      let color = '#378ADD';
-      let eventLabel = '';
-
-      if (holidays.includes(ds)) {
-        multiplier *= 0.65;
-        color = '#639922';
-        eventLabel = 'Holiday';
+      if (holidays.indexOf(ds) !== -1) {
+        mult *= holidayMult; color = '#639922'; eventLabel = 'Public holiday';
       }
 
-      events.product.forEach(ev => {
-        const launch = new Date(ev.date);
-        const diff = Math.floor((d - launch) / 86400000);
-        if (diff >= 0 && diff < ev.duration) {
-          const decay = 1 - (diff / ev.duration) * 0.6;
-          multiplier *= (1 + (ev.spike / 100) * decay);
-          color = '#BA7517';
-          eventLabel = ev.name;
-        }
-      });
+      if (toggles.product) {
+        events.product.forEach(function(ev) {
+          var diff = Math.floor((d - new Date(ev.date)) / 86400000);
+          if (diff >= 0 && diff < ev.duration) {
+            mult *= (1 + (ev.spike / 100) * (1 - (diff / ev.duration) * 0.6));
+            color = '#BA7517'; eventLabel = ev.name;
+          }
+        });
+      }
 
-      events.sale.forEach(ev => {
-        const start = new Date(ev.date), end = new Date(ev.endDate);
-        end.setDate(end.getDate() + 3);
-        if (d >= start && d <= end) {
-          const total = (new Date(ev.endDate) - start) / 86400000 + 3;
-          const pos = (d - start) / 86400000;
-          const peak = pos < total * 0.3 ? 1 : (1 - (pos - total * 0.3) / (total * 0.7) * 0.5);
-          multiplier *= (1 + (ev.spike / 100) * peak);
-          color = '#EF9F27';
-          eventLabel = ev.name;
-        }
-        const preStart = new Date(ev.date); preStart.setDate(preStart.getDate() - 2);
-        if (d >= preStart && d < new Date(ev.date)) {
-          multiplier *= 1.15;
-          color = '#EF9F27';
-        }
-      });
+      if (toggles.sale) {
+        events.sale.forEach(function(ev) {
+          var start = new Date(ev.date), end = new Date(ev.endDate);
+          end.setDate(end.getDate() + 3);
+          if (d >= start && d <= end) {
+            var total = (new Date(ev.endDate) - start) / 86400000 + 3;
+            var pos = (d - start) / 86400000;
+            var pk = pos < total * 0.3 ? 1 : (1 - (pos - total * 0.3) / (total * 0.7) * 0.5);
+            mult *= (1 + (ev.spike / 100) * pk);
+            color = '#EF9F27'; eventLabel = ev.name;
+          }
+          var preStart = new Date(ev.date); preStart.setDate(preStart.getDate() - 2);
+          if (d >= preStart && d < new Date(ev.date)) { mult *= 1.15; color = '#EF9F27'; }
+        });
+      }
 
-      events.holiday.forEach(ev => {
-        if (ev.date === ds) {
-          multiplier *= (1 + ev.spike / 100);
-          color = '#5DCAA5';
-          eventLabel = ev.name;
-        }
-      });
+      if (toggles.custholiday) {
+        events.holiday.forEach(function(ev) {
+          if (ev.date === ds) { mult *= (1 + ev.spike / 100); color = '#5DCAA5'; eventLabel = ev.name; }
+        });
+      }
 
-      const finalVal = Math.max(1, Math.round(baseline * multiplier));
-      values.push(finalVal);
-      colors.push(color);
+      var finalVal = Math.max(1, Math.round(baseline * mult));
+      values.push(finalVal); colors.push(color);
       if (eventLabel) eventMarkers[i] = eventLabel;
     }
 
-    const avg = Math.round(values.reduce((a, b) => a + b, 0) / values.length);
-    const peak = Math.max(...values);
-    const peakIdx = values.indexOf(peak);
-    const total = values.reduce((a, b) => a + b, 0);
+    var avg = Math.round(values.reduce(function(a,b){return a+b;},0) / values.length);
+    var peak = Math.max.apply(null, values);
+    var peakIdx = values.indexOf(peak);
+    var total = values.reduce(function(a,b){return a+b;},0);
 
     document.getElementById('m-avg').textContent = avg.toLocaleString();
     document.getElementById('m-peak').textContent = peak.toLocaleString();
     document.getElementById('m-peakdate').textContent = labels[peakIdx];
     document.getElementById('m-total').textContent = total.toLocaleString();
 
-    const eventCount = Object.keys(eventMarkers).length;
-    const eventsUsed = [...events.product.map(e => `Product launch: ${e.name} (+${e.spike}%)`), ...events.sale.map(e => `Sale: ${e.name} (+${e.spike}%)`), ...events.holiday.map(e => `Custom event: ${e.name} (${e.spike > 0 ? '+' : ''}${e.spike}%)`)];
-    document.getElementById('eventSummary').innerHTML = eventsUsed.length ? eventsUsed.map(e => `<div style="padding:4px 0; border-bottom: 0.5px solid var(--color-border-tertiary);">${e}</div>`).join('') + `<div style="margin-top:8px;">${eventCount} forecast days affected by events</div>` : 'No custom events added. Add product launches or sale periods in the Events tab.';
+    var eventsUsed = []
+      .concat(toggles.product ? events.product.map(function(e){return 'Product launch: '+e.name+' (+'+e.spike+'%)';}) : [])
+      .concat(toggles.sale ? events.sale.map(function(e){return 'Sale: '+e.name+' (+'+e.spike+'%)';}) : [])
+      .concat(toggles.custholiday ? events.holiday.map(function(e){return 'Custom event: '+e.name+' ('+(e.spike>0?'+':'')+e.spike+'%)';}) : []);
 
-    const builtinEvents = [];
-    if (country !== 'none') builtinEvents.push('built-in public holidays');
-    builtinEvents.push('weekend patterns', 'seasonal trends');
-    document.getElementById('forecastNote').textContent = `Forecast includes: ${builtinEvents.join(', ')}. Blue = normal, amber = sale period, orange = product launch, green = holiday.`;
+    var eventCount = Object.keys(eventMarkers).length;
+    document.getElementById('eventSummary').innerHTML = eventsUsed.length
+      ? eventsUsed.map(function(e){return '<div style="padding:4px 0;border-bottom:0.5px solid var(--color-border-tertiary);">'+e+'</div>';}).join('')
+        + '<div style="margin-top:8px;">'+eventCount+' forecast days affected by custom events</div>'
+      : 'No custom events enabled. Toggle on product releases, sale periods, or custom holidays in the Events tab.';
 
-    if (chartInstance) { chartInstance.destroy(); }
-    const ctx = document.getElementById('forecastChart').getContext('2d');
-    const shortLabels = labels.map(l => { const d = new Date(l); return `${d.getMonth()+1}/${d.getDate()}`; });
+    var autoMods = ['weekend dips', 'seasonal trends'];
+    if (country !== 'none') autoMods.push(country + ' public holidays');
+    document.getElementById('forecastNote').textContent = 'Auto modifiers: ' + autoMods.join(', ') + '. Blue = normal, amber = sale, orange = product launch, green = holiday.';
+
+    if (chartInstance) chartInstance.destroy();
+    var ctx = document.getElementById('forecastChart').getContext('2d');
+    var shortLabels = labels.map(function(l){ var dd=new Date(l); return (dd.getMonth()+1)+'/'+dd.getDate(); });
     chartInstance = new Chart(ctx, {
       type: 'bar',
-      data: {
-        labels: shortLabels,
-        datasets: [{
-          data: values,
-          backgroundColor: colors,
-          borderWidth: 0,
-          borderRadius: 2,
-        }]
-      },
+      data: { labels: shortLabels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0, borderRadius: 2 }] },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
+        responsive: true, maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          tooltip: {
-            callbacks: {
-              title: (items) => labels[items[0].dataIndex],
-              afterBody: (items) => eventMarkers[items[0].dataIndex] ? [`Event: ${eventMarkers[items[0].dataIndex]}`] : []
-            }
-          }
+          tooltip: { callbacks: {
+            title: function(items){ return labels[items[0].dataIndex]; },
+            afterBody: function(items){ return eventMarkers[items[0].dataIndex] ? ['Event: '+eventMarkers[items[0].dataIndex]] : []; }
+          }}
         },
         scales: {
           x: { ticks: { maxTicksLimit: 10, font: { size: 11 }, color: '#888' }, grid: { display: false } },
@@ -429,4 +511,8 @@
       }
     });
   }
+
+  initToggles();
 </script>
+</body>
+</html>
