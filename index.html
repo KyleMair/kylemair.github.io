@@ -1,47 +1,84 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kyle Mair - Melbourne, Australia | Junior Dev</title>
-  <link rel="stylesheet" href="assets/css/styles.css">
-</head>
-<body>
-  <header>
-    <nav>
-      <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="/about">About</a></li>
-        <li><a href="projects.html">Projects</a></li>
-        <li><a href="contact.html">Contact</a></li>
-      </ul>
-    </nav>
-  </header>
 
-  <main>
-    <section id="intro">
-      <img src="assets/imgs/pfp.png" alt="Kyle Mair's Picture" style="float: right; margin-left: 20px; margin-bottom: 20px; object-fit: cover;">
-      <h1>Hi, I'm Kyle Mair</h1>
-      <p>I'm a junior developer from Melbourne Victoria.</p>
-      <p>With a background in Data Analytics, I have a passion for coding and problem-solving.</p>
-    </section>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); color: var(--color-text-primary); }
+  nav { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 2rem; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .nav-brand { font-size: 15px; font-weight: 500; color: var(--color-text-primary); text-decoration: none; }
+  .nav-links { display: flex; gap: 2rem; list-style: none; }
+  .nav-links a { font-size: 14px; color: var(--color-text-secondary); text-decoration: none; transition: color 0.15s; }
+  .nav-links a:hover { color: var(--color-text-primary); }
+  .hero { display: grid; grid-template-columns: 1fr auto; gap: 3rem; align-items: center; padding: 4rem 2rem 3rem; max-width: 820px; margin: 0 auto; }
+  .hero-text h1 { font-size: 36px; font-weight: 500; line-height: 1.2; margin-bottom: 1rem; }
+  .hero-text h1 span { color: #7F77DD; }
+  .hero-text p { font-size: 16px; color: var(--color-text-secondary); line-height: 1.7; margin-bottom: 0.5rem; }
+  .hero-cta { display: flex; gap: 12px; margin-top: 1.75rem; flex-wrap: wrap; }
+  .btn { font-size: 14px; padding: 9px 20px; border-radius: var(--border-radius-md); cursor: pointer; text-decoration: none; font-weight: 500; transition: opacity 0.15s; }
+  .btn-primary { background: #7F77DD; color: #fff; border: none; }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-secondary { background: transparent; color: var(--color-text-primary); border: 0.5px solid var(--color-border-primary); }
+  .btn-secondary:hover { background: var(--color-background-secondary); }
+  .avatar-wrap { position: relative; }
+  .avatar { width: 160px; height: 160px; border-radius: 50%; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .avatar-initials { font-size: 48px; font-weight: 500; color: #7F77DD; }
+  .avatar-dot { position: absolute; bottom: 8px; right: 8px; width: 16px; height: 16px; background: #1D9E75; border-radius: 50%; border: 2.5px solid var(--color-background-primary); }
+  .section { max-width: 820px; margin: 0 auto; padding: 0 2rem 3rem; }
+  .section-label { font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.25rem; }
+  .skills-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .skill-pill { font-size: 13px; padding: 6px 14px; border-radius: 99px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); }
+  .skill-pill.highlight { background: #EEEDFE; border-color: #AFA9EC; color: #3C3489; }
+  footer { max-width: 820px; margin: 0 auto; padding: 1.5rem 2rem; border-top: 0.5px solid var(--color-border-tertiary); font-size: 13px; color: var(--color-text-tertiary); }
+  .divider { max-width: 820px; margin: 0 auto 2.5rem; padding: 0 2rem; }
+  .divider hr { border: none; border-top: 0.5px solid var(--color-border-tertiary); }
+  @media (max-width: 560px) {
+    .hero { grid-template-columns: 1fr; }
+    .avatar-wrap { order: -1; }
+    .avatar { width: 100px; height: 100px; }
+    .avatar-initials { font-size: 32px; }
+  }
+</style>
 
-    <section id="skills">
-      <h2>Skills</h2>
-      <ul> 
-        <li>HTML</li>
-        <li>CSS</li>
-        <li>JavaScript</li>
-        <li>React</li>
-        <li>Node.js</li>
-      </ul>
-    </section>
-  </main>
+<nav>
+  <a class="nav-brand" href="/">Kyle Mair</a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/about">About</a></li>
+    <li><a href="projects.html">Projects</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+</nav>
 
-  <footer>
-    <p>© 2025 Kyle Mair</p>
-  </footer>
+<div class="hero">
+  <div class="hero-text">
+    <p style="font-size:14px; color: #7F77DD; font-weight:500; margin-bottom:0.5rem;">Melbourne, Victoria</p>
+    <h1>Hi, I'm <span>Kyle Mair</span></h1>
+    <p>Junior developer with a background in Data Analytics.</p>
+    <p>I have a passion for coding and problem-solving.</p>
+    <div class="hero-cta">
+      <a href="projects.html" class="btn btn-primary">View projects</a>
+      <a href="contact.html" class="btn btn-secondary">Get in touch</a>
+    </div>
+  </div>
+  <div class="avatar-wrap">
+    <div class="avatar">
+      <span class="avatar-initials">KM</span>
+    </div>
+    <div class="avatar-dot"></div>
+  </div>
+</div>
 
-  <script src="assets/js/main.js"></script>
-</body>
-</html>
+<div class="divider"><hr></div>
+
+<div class="section">
+  <p class="section-label">Skills</p>
+  <div class="skills-grid">
+    <span class="skill-pill highlight">HTML</span>
+    <span class="skill-pill highlight">CSS</span>
+    <span class="skill-pill highlight">JavaScript</span>
+    <span class="skill-pill highlight">React</span>
+    <span class="skill-pill highlight">Node.js</span>
+  </div>
+</div>
+
+<footer>
+  <p>© 2025 Kyle Mair</p>
+</footer>
