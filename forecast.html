@@ -150,7 +150,7 @@
         </div>
         <div class="col">
           <label>Baseline tickets/day</label>
-          <input type="number" id="baseline" value="120" min="1" max="10000" style="width:110px;" />
+          <input type="number" id="baseline" value="835" min="1" max="10000" style="width:110px;" />
         </div>
       </div>
     </div>
@@ -158,8 +158,8 @@
     <div class="section">
       <div class="section-title">Automatic modifiers <span style="font-size:12px;font-weight:400;color:var(--color-text-tertiary);">— always applied</span></div>
       <div class="form-row">
-        <div class="col"><label>Weekend dip (%)</label><input type="number" id="weekendDip" value="22" min="0" max="80" style="width:100px;" /></div>
-        <div class="col"><label>Nov/Dec uplift (%)</label><input type="number" id="seasonalLift" value="12" min="0" max="100" style="width:100px;" /></div>
+        <div class="col"><label>Weekend dip (%)</label><input type="number" id="weekendDip" value="29" min="0" max="80" style="width:100px;" /></div>
+        <div class="col" style="justify-content:flex-end;"><p style="font-size:12px;color:var(--color-text-secondary);padding-bottom:6px;">Seasonality calibrated from your data</p></div>
       </div>
       <div class="form-row">
         <div class="col">
@@ -399,8 +399,11 @@
     var baseline = parseInt(document.getElementById('baseline').value) || 120;
     var country = document.getElementById('country').value;
     var weekendDipPct = parseFloat(document.getElementById('weekendDip').value) / 100;
-    var seasonalLift = parseFloat(document.getElementById('seasonalLift').value) / 100;
     var holidayMult = parseFloat(document.getElementById('holidayReduction').value) / 100;
+    // Per-month seasonal multipliers derived from your historical data (Jan-Dec)
+    var monthMult = [0.766, 0.727, 0.873, 0.983, 1.215, 1.255, 1.223, 1.099, 1.219, 1.048, 1.237, 0.962];
+    // Per-day-of-week multipliers (0=Sun, 1=Mon ... 6=Sat) derived from your data
+    var dowMult = [0.631, 0.847, 1.088, 1.065, 1.020, 0.986, 0.783];
 
     var today = new Date();
     var labels = [], values = [], colors = [], eventMarkers = {};
@@ -416,10 +419,14 @@
 
       var mult = 1;
       var dow = d.getDay();
+      // Apply data-calibrated day-of-week pattern
+      mult *= dowMult[dow];
+      // Apply weekend dip (user-adjustable, stacked on top of dow pattern)
       if (dow === 0 || dow === 6) mult *= (1 - weekendDipPct);
+      // Apply data-calibrated monthly seasonality
+      mult *= monthMult[d.getMonth()];
+      // Small daily noise
       mult *= (0.93 + Math.random() * 0.14);
-      var month = d.getMonth() + 1;
-      if (month === 11 || month === 12) mult *= (1 + seasonalLift);
 
       var color = '#378ADD', eventLabel = '';
 
