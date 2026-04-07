@@ -159,20 +159,7 @@
       <div class="section-title">Automatic modifiers <span style="font-size:12px;font-weight:400;color:var(--color-text-tertiary);">— always applied</span></div>
       <div class="form-row">
         <div class="col"><label>Weekend dip (%)</label><input type="number" id="weekendDip" value="15" min="0" max="80" style="width:100px;" /></div>
-        <div class="col" style="justify-content:flex-end;"><p style="font-size:12px;color:var(--color-text-secondary);padding-bottom:6px;">Seasonality calibrated from your data</p></div>
-      </div>
-      <div class="form-row">
-        <div class="col">
-          <label>Country holidays</label>
-          <select id="country">
-            <option value="US">United States</option>
-            <option value="UK">United Kingdom</option>
-            <option value="CA">Canada</option>
-            <option value="AU">Australia</option>
-            <option value="none">None</option>
-          </select>
-        </div>
-        <div class="col"><label>Volume on holidays (%)</label><input type="number" id="holidayReduction" value="65" min="0" max="150" style="width:110px;" /></div>
+        <div class="col" style="justify-content:flex-end;"><p style="font-size:12px;color:var(--color-text-secondary);padding-bottom:6px;">Seasonality &amp; holiday impacts calibrated from your data</p></div>
       </div>
     </div>
 
@@ -381,25 +368,24 @@
     reader.readAsText(file);
   }
 
-  function getHolidayDates(year, country) {
-    var defs = {
-      US: [[1,1],[7,4],[11,11],[12,25],[12,26]],
-      UK: [[1,1],[4,1],[12,25],[12,26]],
-      CA: [[1,1],[7,1],[12,25],[12,26]],
-      AU: [[1,1],[1,26],[12,25],[12,26]]
-    };
-    return (defs[country] || []).map(function(md) {
-      return year + '-' + String(md[0]).padStart(2,'0') + '-' + String(md[1]).padStart(2,'0');
-    });
+  // BFCM period only — all other holiday adjustments removed
+  var HOLIDAY_MULTS = {
+    '11-27': 1.40,  // Thanksgiving (US)
+    '11-28': 1.19,  // Black Friday (US)
+    '11-29': 1.08,  // Small Business Saturday
+    '12-02': 1.15   // Cyber Monday (first Mon after Black Friday)
+  };
+
+  function getHolidayMult(dateStr) {
+    var mmdd = dateStr.slice(5); // 'YYYY-MM-DD' -> 'MM-DD'
+    return HOLIDAY_MULTS[mmdd] !== undefined ? HOLIDAY_MULTS[mmdd] : null;
   }
 
   function runForecast() {
     showTab('forecast');
     var horizon = parseInt(document.getElementById('horizon').value);
     var baseline = parseInt(document.getElementById('baseline').value) || 120;
-    var country = document.getElementById('country').value;
     var weekendDipPct = parseFloat(document.getElementById('weekendDip').value) / 100;
-    var holidayMult = parseFloat(document.getElementById('holidayReduction').value) / 100;
     // Per-month seasonal multipliers derived from your historical data (Jan-Dec)
     var monthMult = [0.766, 0.727, 0.873, 0.983, 1.215, 1.255, 1.223, 1.099, 1.219, 1.048, 1.237, 0.962];
     // Per-day-of-week multipliers (0=Sun, 1=Mon ... 6=Sat) derived from your data
@@ -407,10 +393,6 @@
 
     var today = new Date();
     var labels = [], values = [], colors = [], eventMarkers = {};
-    var nextYear = today.getFullYear() + 1;
-    var holidays = country !== 'none'
-      ? getHolidayDates(today.getFullYear(), country).concat(getHolidayDates(nextYear, country))
-      : [];
 
     for (var i = 0; i < horizon; i++) {
       var d = new Date(today); d.setDate(d.getDate() + i);
@@ -425,13 +407,12 @@
       if (dow === 0 || dow === 6) mult *= (1 - weekendDipPct);
       // Apply data-calibrated monthly seasonality
       mult *= monthMult[d.getMonth()];
-      // Small daily noise
-      mult *= (0.93 + Math.random() * 0.14);
 
       var color = '#378ADD', eventLabel = '';
 
-      if (holidays.indexOf(ds) !== -1) {
-        mult *= holidayMult; color = '#639922'; eventLabel = 'Public holiday';
+      var hMult = getHolidayMult(ds);
+      if (hMult !== null) {
+        mult *= hMult; color = '#639922'; eventLabel = 'Holiday';
       }
 
       if (toggles.product) {
@@ -492,9 +473,7 @@
         + '<div style="margin-top:8px;">'+eventCount+' forecast days affected by custom events</div>'
       : 'No custom events enabled. Toggle on product releases, sale periods, or custom holidays in the Events tab.';
 
-    var autoMods = ['weekend dips', 'seasonal trends'];
-    if (country !== 'none') autoMods.push(country + ' public holidays');
-    document.getElementById('forecastNote').textContent = 'Auto modifiers: ' + autoMods.join(', ') + '. Blue = normal, amber = sale, orange = product launch, green = holiday.';
+    document.getElementById('forecastNote').textContent = 'Auto modifiers: weekend dips, monthly seasonality, per-holiday impacts (US/EU/AU) — all calibrated from your data. Blue = normal, amber = sale, orange = product launch, green = holiday.';
 
     if (chartInstance) chartInstance.destroy();
     var ctx = document.getElementById('forecastChart').getContext('2d');
