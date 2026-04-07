@@ -130,10 +130,21 @@
       <div class="upload-area" onclick="document.getElementById('fileInput').click()">
         <div style="font-size:24px;margin-bottom:8px;color:var(--color-text-secondary);">&#8593;</div>
         <div class="upload-text">Click to upload CSV</div>
-        <div class="upload-hint">Expected columns: date, tickets &mdash; e.g. 2024-01-15, 142</div>
+        <div class="upload-hint">Columns: date, tickets, orders, revenue &mdash; e.g. 2024-01-15, 142, 38, 6840.00</div>
       </div>
       <input type="file" id="fileInput" accept=".csv" onchange="handleFileUpload(event)" />
-      <div id="dataStatus" class="data-status status-demo">Using demo data (2 years of synthetic ecommerce ticket history)</div>
+      <div id="dataStatus" class="data-status status-demo">No data uploaded. Upload a CSV to run a Prophet forecast.</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Backend API</div>
+      <div class="form-row">
+        <div class="col" style="flex:1;">
+          <label>Render API URL</label>
+          <input type="text" id="apiUrl" placeholder="https://ticket-forecaster-api.onrender.com" style="width:100%;" />
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--color-text-secondary);margin-top:6px;">Deploy the backend to Render and paste your URL here. The app will send your CSV and event config to the API and render the Prophet forecast.</p>
     </div>
 
     <div class="section">
@@ -158,7 +169,7 @@
     <div class="section">
       <div class="section-title">Automatic modifiers <span style="font-size:12px;font-weight:400;color:var(--color-text-tertiary);">— always applied</span></div>
       <div class="form-row">
-        <div class="col"><label>Weekend dip (%)</label><input type="number" id="weekendDip" value="15" min="0" max="80" style="width:100px;" /></div>
+        <div class="col"><label>Weekend dip (%)</label><input type="number" id="weekendDip" value="29" min="0" max="80" style="width:100px;" /></div>
         <div class="col" style="justify-content:flex-end;"><p style="font-size:12px;color:var(--color-text-secondary);padding-bottom:6px;">Seasonality &amp; holiday impacts calibrated from your data</p></div>
       </div>
     </div>
@@ -230,7 +241,7 @@
 
     <div style="display:flex;gap:8px;margin-top:4px;">
       <button class="btn" onclick="showTab('data')">&larr; Back</button>
-      <button class="btn btn-primary" onclick="runForecast()">Run forecast &rarr;</button>
+      <button class="btn btn-primary" id="runBtn" onclick="runForecast()">Run forecast &rarr;</button>
     </div>
   </div>
 
@@ -261,7 +272,7 @@
 <script>
   var events = { product: [], sale: [], holiday: [] };
   var toggles = { product: false, sale: false, custholiday: false };
-  var uploadedData = null;
+  var uploadedFile = null;
   var chartInstance = null;
 
   function initToggles() {
@@ -304,7 +315,8 @@
       spike = parseFloat(document.getElementById('prodSpike').value);
       duration = parseInt(document.getElementById('prodDuration').value);
       if (!name || !date) return;
-      events.product.push({ name: name, date: date, spike: spike, duration: duration });
+      var end = new Date(date); end.setDate(end.getDate() + duration - 1);
+      events.product.push({ name: name, date: date, endDate: end.toISOString().split('T')[0], spike: spike, duration: duration });
     } else if (type === 'sale') {
       if (!toggles.sale) return;
       name = document.getElementById('saleName').value.trim();
@@ -319,7 +331,7 @@
       date = document.getElementById('holidayDate').value;
       spike = parseFloat(document.getElementById('holidaySpike').value);
       if (!name || !date) return;
-      events.holiday.push({ name: name, date: date, spike: spike });
+      events.holiday.push({ name: name, date: date, endDate: date, spike: spike });
     }
     renderTags(type);
   }
@@ -344,124 +356,100 @@
   function handleFileUpload(evt) {
     var file = evt.target.files[0];
     if (!file) return;
+    uploadedFile = file;
     var reader = new FileReader();
     reader.onload = function(e) {
       var lines = e.target.result.trim().split('\n');
-      var data = [];
-      for (var i = 1; i < lines.length; i++) {
-        var parts = lines[i].split(',');
-        if (parts.length >= 2) {
-          var dd = parts[0].trim(), tt = parseInt(parts[1].trim());
-          if (!isNaN(tt)) data.push({ date: dd, tickets: tt });
-        }
-      }
-      if (data.length > 10) {
-        uploadedData = data;
-        // Calculate deseasonalised baseline by stripping out dow and monthly multipliers
-        var monthMult = [0.766, 0.727, 0.873, 0.983, 1.215, 1.255, 1.223, 1.099, 1.219, 1.048, 1.237, 0.962];
-        var dowMult   = [0.631, 0.847, 1.088, 1.065, 1.020, 0.986, 0.783]; // 0=Sun..6=Sat
-        var total = 0;
-        data.forEach(function(row) {
-          var d = new Date(row.date);
-          var mMult = monthMult[d.getMonth()];
-          var dMult = dowMult[d.getDay()];
-          total += row.tickets / (mMult * dMult);
-        });
-        var baseline = Math.round(total / data.length);
-        document.getElementById('baseline').value = baseline;
-        var simpleAvg = Math.round(data.reduce(function(s,d){return s+d.tickets;},0) / data.length);
-        document.getElementById('dataStatus').textContent = 'Loaded ' + data.length + ' days of data. Deseasonalised baseline: ' + baseline + ' tickets/day (simple avg: ' + simpleAvg + ').';
-        document.getElementById('dataStatus').className = 'data-status status-ok';
-      } else {
-        document.getElementById('dataStatus').textContent = 'Could not parse CSV. Make sure it has date and tickets columns.';
-      }
+      var headers = lines[0].toLowerCase().split(',').map(function(h){ return h.trim(); });
+      var hasOrders = headers.indexOf('orders') !== -1;
+      var hasRevenue = headers.indexOf('revenue') !== -1;
+      var rowCount = lines.length - 1;
+      var regressors = [];
+      if (hasOrders) regressors.push('orders');
+      if (hasRevenue) regressors.push('revenue (AUD)');
+      var msg = 'Loaded ' + rowCount + ' days of data.';
+      if (regressors.length) msg += ' Regressors detected: ' + regressors.join(', ') + '.';
+      else msg += ' No regressors detected — add orders and revenue columns for higher accuracy.';
+      document.getElementById('dataStatus').textContent = msg;
+      document.getElementById('dataStatus').className = 'data-status status-ok';
     };
     reader.readAsText(file);
   }
 
-  // BFCM period only — all other holiday adjustments removed
-  var HOLIDAY_MULTS = {
-    '11-27': 1.40,  // Thanksgiving (US)
-    '11-28': 1.19,  // Black Friday (US)
-    '11-29': 1.08,  // Small Business Saturday
-    '12-02': 1.15   // Cyber Monday (first Mon after Black Friday)
-  };
+  async function runForecast() {
+    var apiUrl = document.getElementById('apiUrl').value.trim().replace(/\/$/, '');
+    if (!apiUrl) {
+      alert('Please enter your Render API URL in the Data tab before running the forecast.');
+      showTab('data');
+      return;
+    }
+    if (!uploadedFile) {
+      alert('Please upload a CSV file before running the forecast.');
+      showTab('data');
+      return;
+    }
 
-  function getHolidayMult(dateStr) {
-    var mmdd = dateStr.slice(5); // 'YYYY-MM-DD' -> 'MM-DD'
-    return HOLIDAY_MULTS[mmdd] !== undefined ? HOLIDAY_MULTS[mmdd] : null;
+    var btn = document.getElementById('runBtn');
+    btn.textContent = 'Running forecast...';
+    btn.disabled = true;
+
+    // Build event list for API
+    var allEvents = [];
+    if (toggles.product) {
+      events.product.forEach(function(ev) {
+        allEvents.push({ name: ev.name, start_date: ev.date, end_date: ev.endDate, spike_pct: ev.spike });
+      });
+    }
+    if (toggles.sale) {
+      events.sale.forEach(function(ev) {
+        allEvents.push({ name: ev.name, start_date: ev.date, end_date: ev.endDate, spike_pct: ev.spike });
+      });
+    }
+    if (toggles.custholiday) {
+      events.holiday.forEach(function(ev) {
+        allEvents.push({ name: ev.name, start_date: ev.date, end_date: ev.endDate, spike_pct: ev.spike });
+      });
+    }
+
+    var params = {
+      horizon_days: parseInt(document.getElementById('horizon').value),
+      events: allEvents
+    };
+
+    var formData = new FormData();
+    formData.append('file', uploadedFile);
+    formData.append('params', JSON.stringify(params));
+
+    try {
+      var resp = await fetch(apiUrl + '/forecast', { method: 'POST', body: formData });
+      if (!resp.ok) {
+        var err = await resp.json();
+        throw new Error(err.detail || 'API error ' + resp.status);
+      }
+      var data = await resp.json();
+      renderForecast(data);
+      showTab('forecast');
+    } catch(e) {
+      alert('Forecast failed: ' + e.message + '\n\nMake sure your Render API is running and the URL is correct.');
+    } finally {
+      btn.textContent = 'Run forecast \u2192';
+      btn.disabled = false;
+    }
   }
 
-  function runForecast() {
-    showTab('forecast');
-    var horizon = parseInt(document.getElementById('horizon').value);
-    var baseline = parseInt(document.getElementById('baseline').value) || 120;
-    var weekendDipPct = parseFloat(document.getElementById('weekendDip').value) / 100;
-    // Per-month seasonal multipliers derived from your historical data (Jan-Dec)
-    var monthMult = [0.766, 0.727, 0.873, 0.983, 1.215, 1.255, 1.223, 1.099, 1.219, 1.048, 1.237, 0.962];
-    // Per-day-of-week multipliers (0=Sun, 1=Mon ... 6=Sat) derived from your data
-    var dowMult = [0.631, 0.847, 1.088, 1.065, 1.020, 0.986, 0.783];
+  function renderForecast(data) {
+    var forecast = data.forecast;
+    var info = data.model_info;
 
-    var today = new Date();
-    var labels = [], values = [], colors = [], eventMarkers = {};
+    var labels = forecast.map(function(p){ return p.date; });
+    var values = forecast.map(function(p){ return p.forecast; });
+    var lowers = forecast.map(function(p){ return p.lower; });
+    var uppers = forecast.map(function(p){ return p.upper; });
+    var eventNames = {};
+    forecast.forEach(function(p, i){ if (p.event) eventNames[i] = p.event; });
 
-    for (var i = 0; i < horizon; i++) {
-      var d = new Date(today); d.setDate(d.getDate() + i);
-      var ds = d.toISOString().split('T')[0];
-      labels.push(ds);
-
-      var mult = 1;
-      var dow = d.getDay();
-      // Apply data-calibrated day-of-week pattern
-      mult *= dowMult[dow];
-      // Apply weekend dip (user-adjustable, stacked on top of dow pattern)
-      if (dow === 0 || dow === 6) mult *= (1 - weekendDipPct);
-      // Apply data-calibrated monthly seasonality
-      mult *= monthMult[d.getMonth()];
-
-      var color = '#378ADD', eventLabel = '';
-
-      var hMult = getHolidayMult(ds);
-      if (hMult !== null) {
-        mult *= hMult; color = '#639922'; eventLabel = 'Holiday';
-      }
-
-      if (toggles.product) {
-        events.product.forEach(function(ev) {
-          var diff = Math.floor((d - new Date(ev.date)) / 86400000);
-          if (diff >= 0 && diff < ev.duration) {
-            mult *= (1 + (ev.spike / 100) * (1 - (diff / ev.duration) * 0.6));
-            color = '#BA7517'; eventLabel = ev.name;
-          }
-        });
-      }
-
-      if (toggles.sale) {
-        events.sale.forEach(function(ev) {
-          var start = new Date(ev.date), end = new Date(ev.endDate);
-          end.setDate(end.getDate() + 3);
-          if (d >= start && d <= end) {
-            var total = (new Date(ev.endDate) - start) / 86400000 + 3;
-            var pos = (d - start) / 86400000;
-            var pk = pos < total * 0.3 ? 1 : (1 - (pos - total * 0.3) / (total * 0.7) * 0.5);
-            mult *= (1 + (ev.spike / 100) * pk);
-            color = '#EF9F27'; eventLabel = ev.name;
-          }
-          var preStart = new Date(ev.date); preStart.setDate(preStart.getDate() - 2);
-          if (d >= preStart && d < new Date(ev.date)) { mult *= 1.15; color = '#EF9F27'; }
-        });
-      }
-
-      if (toggles.custholiday) {
-        events.holiday.forEach(function(ev) {
-          if (ev.date === ds) { mult *= (1 + ev.spike / 100); color = '#5DCAA5'; eventLabel = ev.name; }
-        });
-      }
-
-      var finalVal = Math.max(1, Math.round(baseline * mult));
-      values.push(finalVal); colors.push(color);
-      if (eventLabel) eventMarkers[i] = eventLabel;
-    }
+    // Colors: amber for event days, blue for normal
+    var colors = values.map(function(_, i){ return eventNames[i] ? '#EF9F27' : '#378ADD'; });
 
     var avg = Math.round(values.reduce(function(a,b){return a+b;},0) / values.length);
     var peak = Math.max.apply(null, values);
@@ -473,33 +461,79 @@
     document.getElementById('m-peakdate').textContent = labels[peakIdx];
     document.getElementById('m-total').textContent = total.toLocaleString();
 
-    var eventsUsed = []
-      .concat(toggles.product ? events.product.map(function(e){return 'Product launch: '+e.name+' (+'+e.spike+'%)';}) : [])
-      .concat(toggles.sale ? events.sale.map(function(e){return 'Sale: '+e.name+' (+'+e.spike+'%)';}) : [])
-      .concat(toggles.custholiday ? events.holiday.map(function(e){return 'Custom event: '+e.name+' ('+(e.spike>0?'+':'')+e.spike+'%)';}) : []);
+    var regressorStr = info.regressors && info.regressors.length
+      ? 'Regressors: ' + info.regressors.join(', ') + '. '
+      : 'No regressors used. ';
+    document.getElementById('forecastNote').textContent =
+      'Prophet model trained on ' + info.training_rows + ' days (' + info.training_from + ' to ' + info.training_to + '). ' +
+      regressorStr + 'Shaded band = 80% confidence interval.';
 
-    var eventCount = Object.keys(eventMarkers).length;
+    // Event summary
+    var eventsUsed = [];
+    if (toggles.product) events.product.forEach(function(e){ eventsUsed.push('Product launch: ' + e.name + ' (+' + e.spike + '%)'); });
+    if (toggles.sale) events.sale.forEach(function(e){ eventsUsed.push('Sale: ' + e.name + ' (+' + e.spike + '%)'); });
+    if (toggles.custholiday) events.holiday.forEach(function(e){ eventsUsed.push('Custom: ' + e.name + ' (' + (e.spike>0?'+':'') + e.spike + '%)'); });
     document.getElementById('eventSummary').innerHTML = eventsUsed.length
-      ? eventsUsed.map(function(e){return '<div style="padding:4px 0;border-bottom:0.5px solid var(--color-border-tertiary);">'+e+'</div>';}).join('')
-        + '<div style="margin-top:8px;">'+eventCount+' forecast days affected by custom events</div>'
-      : 'No custom events enabled. Toggle on product releases, sale periods, or custom holidays in the Events tab.';
-
-    document.getElementById('forecastNote').textContent = 'Auto modifiers: weekend dips, monthly seasonality, per-holiday impacts (US/EU/AU) — all calibrated from your data. Blue = normal, amber = sale, orange = product launch, green = holiday.';
+      ? eventsUsed.map(function(e){ return '<div style="padding:4px 0;border-bottom:0.5px solid var(--color-border-tertiary);">'+e+'</div>'; }).join('')
+      : 'No custom events enabled.';
 
     if (chartInstance) chartInstance.destroy();
     var ctx = document.getElementById('forecastChart').getContext('2d');
-    var shortLabels = labels.map(function(l){ var dd=new Date(l); return (dd.getMonth()+1)+'/'+dd.getDate(); });
+    var shortLabels = labels.map(function(l){ var d=new Date(l); return (d.getMonth()+1)+'/'+d.getDate(); });
+
     chartInstance = new Chart(ctx, {
-      type: 'bar',
-      data: { labels: shortLabels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0, borderRadius: 2 }] },
+      data: {
+        labels: shortLabels,
+        datasets: [
+          {
+            type: 'bar',
+            data: values,
+            backgroundColor: colors,
+            borderWidth: 0,
+            borderRadius: 2,
+            order: 2,
+          },
+          {
+            type: 'line',
+            data: uppers,
+            borderColor: 'rgba(55,138,221,0.2)',
+            backgroundColor: 'rgba(55,138,221,0.1)',
+            pointRadius: 0,
+            borderWidth: 1,
+            fill: '+1',
+            order: 1,
+          },
+          {
+            type: 'line',
+            data: lowers,
+            borderColor: 'rgba(55,138,221,0.2)',
+            backgroundColor: 'rgba(55,138,221,0.1)',
+            pointRadius: 0,
+            borderWidth: 1,
+            fill: false,
+            order: 1,
+          }
+        ]
+      },
       options: {
-        responsive: true, maintainAspectRatio: false,
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: {
-            title: function(items){ return labels[items[0].dataIndex]; },
-            afterBody: function(items){ return eventMarkers[items[0].dataIndex] ? ['Event: '+eventMarkers[items[0].dataIndex]] : []; }
-          }}
+          tooltip: {
+            callbacks: {
+              title: function(items){ return labels[items[0].dataIndex]; },
+              afterBody: function(items){
+                var idx = items[0].dataIndex;
+                var lines = [
+                  'Lower: ' + lowers[idx].toLocaleString(),
+                  'Upper: ' + uppers[idx].toLocaleString()
+                ];
+                if (eventNames[idx]) lines.push('Event: ' + eventNames[idx]);
+                return lines;
+              }
+            }
+          }
         },
         scales: {
           x: { ticks: { maxTicksLimit: 10, font: { size: 11 }, color: '#888' }, grid: { display: false } },
