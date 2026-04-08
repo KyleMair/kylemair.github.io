@@ -133,7 +133,7 @@
         <div class="upload-hint">Columns: date, tickets, orders, revenue &mdash; e.g. 2024-01-15, 142, 38, 6840.00</div>
       </div>
       <input type="file" id="fileInput" accept=".csv" onchange="handleFileUpload(event)" />
-      <div id="dataStatus" class="data-status status-demo">No data uploaded. Upload a CSV to run a Prophet forecast.</div>
+      <div id="dataStatus" class="data-status status-demo">No data uploaded. Upload a CSV to run a forecast.</div>
     </div>
 
     <div class="section">
@@ -144,7 +144,7 @@
           <input type="text" id="apiUrl" placeholder="https://your-app.onrender.com" style="width:100%;" />
         </div>
       </div>
-      <p style="font-size:12px;color:var(--color-text-secondary);margin-top:6px;">Deploy the backend to Render and paste your URL here. The app will send your CSV and event config to the API and render the Prophet forecast.</p>
+      <p style="font-size:12px;color:var(--color-text-secondary);margin-top:6px;">Deploy the backend to Render and paste your URL here. The app will send your CSV and event config to the API and return the forecast.</p>
     </div>
 
     <div class="section">
@@ -169,7 +169,7 @@
     <div class="section">
       <div class="section-title">Automatic modifiers <span style="font-size:12px;font-weight:400;color:var(--color-text-tertiary);">— always applied</span></div>
       <div class="form-row">
-        <div class="col"><label>Weekend dip (%)</label><input type="number" id="weekendDip" value="29" min="0" max="80" style="width:100px;" /></div>
+        <div class="col"><label>Weekend dip (%)</label><input type="number" id="weekendDip" value="15" min="0" max="80" style="width:100px;" /></div>
         <div class="col" style="justify-content:flex-end;"><p style="font-size:12px;color:var(--color-text-secondary);padding-bottom:6px;">Seasonality &amp; holiday impacts calibrated from your data</p></div>
       </div>
     </div>
@@ -546,8 +546,8 @@
       ? 'Regressors: ' + info.regressors.join(', ') + '. '
       : 'No regressors used. ';
     document.getElementById('forecastNote').textContent =
-      'Prophet model trained on ' + info.training_rows + ' days (' + info.training_from + ' to ' + info.training_to + '). ' +
-      regressorStr + 'Shaded band = 80% confidence interval. Model: AutoARIMA + AutoETS ensemble.';
+      'Model trained on ' + info.training_rows + ' days (' + info.training_from + ' to ' + info.training_to + '). ' +
+      regressorStr + 'Shaded band = 80% confidence interval.';
 
     // Event summary
     var eventsUsed = [];
