@@ -141,7 +141,7 @@
       <div class="form-row">
         <div class="col" style="flex:1;">
           <label>Render API URL</label>
-          <input type="text" id="apiUrl" placeholder="https://ticket-forecaster-api.onrender.com" style="width:100%;" />
+          <input type="text" id="apiUrl" placeholder="https://your-app.onrender.com" style="width:100%;" />
         </div>
       </div>
       <p style="font-size:12px;color:var(--color-text-secondary);margin-top:6px;">Deploy the backend to Render and paste your URL here. The app will send your CSV and event config to the API and render the Prophet forecast.</p>
@@ -377,12 +377,21 @@
   }
 
   async function runForecast() {
-    var apiUrl = document.getElementById('apiUrl').value.trim().replace(/\/$/, '');
+    var apiUrl = document.getElementById('apiUrl').value.trim().replace(/\/+$/, '');
     if (!apiUrl) {
       alert('Please enter your Render API URL in the Data tab before running the forecast.');
       showTab('data');
       return;
     }
+
+    // If no file object stored, try reading from the file input directly
+    if (!uploadedFile) {
+      var fileInput = document.getElementById('fileInput');
+      if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        uploadedFile = fileInput.files[0];
+      }
+    }
+
     if (!uploadedFile) {
       alert('Please upload a CSV file before running the forecast.');
       showTab('data');
@@ -392,6 +401,8 @@
     var btn = document.getElementById('runBtn');
     btn.textContent = 'Running forecast...';
     btn.disabled = true;
+    console.log('Sending forecast request to:', apiUrl + '/forecast');
+    console.log('File:', uploadedFile.name, uploadedFile.size, 'bytes');
 
     // Build event list for API
     var allEvents = [];
