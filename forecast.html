@@ -464,8 +464,46 @@
     }
   }
 
+  function applyClientMultipliers(forecast) {
+    // Build a lookup of date -> {name, type, mult}
+    var dateMap = {};
+    var allEvs = [];
+    if (toggles.product)     events.product.forEach(function(e){ allEvs.push({name:e.name,type:'product',start:e.date,end:e.endDate,mult:1+e.spike/100}); });
+    if (toggles.sale)        events.sale.forEach(function(e){    allEvs.push({name:e.name,type:'sale',   start:e.date,end:e.endDate,mult:1+e.spike/100}); });
+    if (toggles.custholiday) events.holiday.forEach(function(e){ allEvs.push({name:e.name,type:'holiday',start:e.date,end:e.endDate,mult:1+e.spike/100}); });
+
+    // BFCM hardcoded
+    var bfcm = {'11-27':{name:'Thanksgiving',type:'bfcm',mult:1.40},'11-28':{name:'Black Friday',type:'bfcm',mult:1.19},'11-29':{name:'Small Business Saturday',type:'bfcm',mult:1.08},'12-01':{name:'Cyber Monday',type:'bfcm',mult:1.15}};
+
+    return forecast.map(function(p) {
+      var d = new Date(p.date);
+      var mmdd = String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      var ev = null;
+
+      // Check BFCM
+      if (bfcm[mmdd]) ev = bfcm[mmdd];
+
+      // Check custom events (overrides BFCM if both match)
+      allEvs.forEach(function(e) {
+        if (p.date >= e.start && p.date <= e.end) ev = e;
+      });
+
+      if (ev) {
+        return {
+          date: p.date,
+          forecast: Math.round(p.forecast * ev.mult),
+          lower:    Math.round(p.lower    * ev.mult),
+          upper:    Math.round(p.upper    * ev.mult),
+          event:      ev.name,
+          event_type: ev.type,
+        };
+      }
+      return p;
+    });
+  }
+
   function renderForecast(data) {
-    var forecast = data.forecast;
+    var forecast = applyClientMultipliers(data.forecast);
     var info = data.model_info;
     lastForecast = forecast;
     lastModelInfo = info;
