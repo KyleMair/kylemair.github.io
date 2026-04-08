@@ -93,6 +93,7 @@
     .data-status { font-size: 13px; padding: 8px 12px; border-radius: var(--border-radius-md); margin-top: 8px; }
     .status-ok { background: var(--color-background-success); color: var(--color-text-success); }
     .status-demo { background: var(--color-background-info); color: var(--color-text-info); }
+    .status-warn { background: var(--color-background-warning); color: var(--color-text-warning); }
     .event-list { display: flex; flex-wrap: wrap; margin-top: 8px; min-height: 28px; }
     .col { display: flex; flex-direction: column; gap: 4px; }
     .forecast-note { font-size: 12px; color: var(--color-text-secondary); margin-top: 8px; }
@@ -109,6 +110,29 @@
     .event-body { margin-top: 1rem; padding-top: 1rem; border-top: 0.5px solid var(--color-border-tertiary); }
     .section.disabled { opacity: 0.45; pointer-events: none; }
     .section.disabled .toggle-row { pointer-events: all; opacity: 1; }
+
+    /* Model info panel */
+    .model-panel { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 1rem; margin-top: 1rem; }
+    .model-panel-title { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .weight-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+    .weight-bar-label { font-size: 12px; color: var(--color-text-secondary); width: 90px; flex-shrink: 0; }
+    .weight-bar-track { flex: 1; height: 6px; background: var(--color-border-tertiary); border-radius: 3px; overflow: hidden; }
+    .weight-bar-fill { height: 100%; border-radius: 3px; background: #378ADD; transition: width 0.4s ease; }
+    .weight-bar-pct { font-size: 12px; color: var(--color-text-tertiary); width: 36px; text-align: right; flex-shrink: 0; }
+    .weight-bar-err { font-size: 11px; color: var(--color-text-tertiary); width: 52px; text-align: right; flex-shrink: 0; }
+
+    /* Info chips */
+    .chip-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .chip { font-size: 11px; padding: 3px 8px; border-radius: 100px; border: 0.5px solid var(--color-border-tertiary); color: var(--color-text-secondary); white-space: nowrap; }
+    .chip-blue  { background: var(--color-background-info);    color: var(--color-text-info);    border-color: rgba(24,95,165,0.25); }
+    .chip-green { background: var(--color-background-success); color: var(--color-text-success); border-color: rgba(39,80,10,0.25); }
+    .chip-amber { background: var(--color-background-warning); color: var(--color-text-warning); border-color: rgba(99,56,6,0.25); }
+
+    /* Interval badge */
+    .interval-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 3px 8px; border-radius: 100px; }
+    .interval-conformal { background: var(--color-background-success); color: var(--color-text-success); }
+    .interval-parametric { background: var(--color-background-info); color: var(--color-text-info); }
+
     @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } .form-row { flex-direction: column; align-items: stretch; } }
   </style>
 </head>
@@ -130,10 +154,11 @@
       <div class="upload-area" onclick="document.getElementById('fileInput').click()">
         <div style="font-size:24px;margin-bottom:8px;color:var(--color-text-secondary);">&#8593;</div>
         <div class="upload-text">Click to upload CSV</div>
-        <div class="upload-hint">Columns: date, tickets, orders, revenue &mdash; e.g. 2024-01-15, 142, 38, 6840.00</div>
+        <div class="upload-hint">Columns: date, tickets, orders (optional), revenue (optional) &mdash; e.g. 2024-01-15, 142, 38, 6840.00</div>
       </div>
       <input type="file" id="fileInput" accept=".csv" onchange="handleFileUpload(event)" />
       <div id="dataStatus" class="data-status status-demo">No data uploaded. Upload a CSV to run a forecast.</div>
+      <div id="dataWarning" style="display:none;" class="data-status status-warn"></div>
     </div>
 
     <div class="section">
@@ -159,15 +184,6 @@
             <option value="180">180 days</option>
           </select>
         </div>
-
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Automatic modifiers <span style="font-size:12px;font-weight:400;color:var(--color-text-tertiary);">— always applied</span></div>
-      <div class="form-row">
-        <div class="col"><label>Weekend dip (%)</label><input type="number" id="weekendDip" value="15" min="0" max="80" style="width:100px;" /></div>
-        <div class="col" style="justify-content:flex-end;"><p style="font-size:12px;color:var(--color-text-secondary);padding-bottom:6px;">Seasonality &amp; holiday impacts calibrated from your data</p></div>
       </div>
     </div>
 
@@ -176,6 +192,13 @@
 
   <!-- TAB 2: EVENTS -->
   <div id="tab-events" style="display:none;">
+
+    <div class="section" style="background:var(--color-background-info);border-color:rgba(24,95,165,0.2);">
+      <p style="font-size:13px;color:var(--color-text-info);">
+        Events are now encoded as training signals &mdash; the model learns their magnitude from your historical data
+        rather than applying fixed multipliers after the fact. The backend handles BFCM automatically when event dates fall in the forecast window.
+      </p>
+    </div>
 
     <div class="section" id="section-product">
       <div class="toggle-row">
@@ -191,8 +214,10 @@
           <div class="col"><label>Launch date</label><input type="date" id="prodDate" /></div>
           <div class="col"><label>Spike (%)</label><input type="number" id="prodSpike" value="35" min="0" max="300" style="width:90px;" /></div>
           <div class="col"><label>Duration (days)</label><input type="number" id="prodDuration" value="7" min="1" max="30" style="width:90px;" /></div>
+          <div class="col"><label>Lead/lag window</label><input type="number" id="prodWindow" value="2" min="0" max="7" style="width:80px;" title="Days before/after to model as suppression and tail" /></div>
           <button class="btn btn-sm" onclick="addEvent('product')" style="margin-bottom:0;">+ Add</button>
         </div>
+        <p style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px;">Lead/lag window: days before (quiet period) and after (tail) the event that the model will learn coefficients for.</p>
         <div class="event-list" id="product-tags"></div>
       </div>
     </div>
@@ -211,6 +236,7 @@
           <div class="col"><label>Start date</label><input type="date" id="saleStart" /></div>
           <div class="col"><label>End date</label><input type="date" id="saleEnd" /></div>
           <div class="col"><label>Spike (%)</label><input type="number" id="saleSpike" value="80" min="0" max="500" style="width:90px;" /></div>
+          <div class="col"><label>Lead/lag window</label><input type="number" id="saleWindow" value="3" min="0" max="7" style="width:80px;" /></div>
           <button class="btn btn-sm" onclick="addEvent('sale')" style="margin-bottom:0;">+ Add</button>
         </div>
         <div class="event-list" id="sale-tags"></div>
@@ -230,6 +256,7 @@
           <div class="col"><label>Event name</label><input type="text" id="holidayName" placeholder="e.g. Company closure" style="width:170px;" /></div>
           <div class="col"><label>Date</label><input type="date" id="holidayDate" /></div>
           <div class="col"><label>Volume change (%)</label><input type="number" id="holidaySpike" value="-20" min="-100" max="200" style="width:100px;" /></div>
+          <div class="col"><label>Lead/lag window</label><input type="number" id="holidayWindow" value="1" min="0" max="5" style="width:80px;" /></div>
           <button class="btn btn-sm" onclick="addEvent('holiday')" style="margin-bottom:0;">+ Add</button>
         </div>
         <div class="event-list" id="holiday-tags"></div>
@@ -250,6 +277,7 @@
       <div class="metric"><div class="metric-label">Peak date</div><div class="metric-value" id="m-peakdate" style="font-size:16px;">—</div></div>
       <div class="metric"><div class="metric-label">Total forecast period</div><div class="metric-value" id="m-total">—</div></div>
     </div>
+
     <div class="section">
       <div class="section-title">Daily ticket forecast</div>
       <div class="chart-wrap"><canvas id="forecastChart"></canvas></div>
@@ -262,10 +290,24 @@
       </div>
       <p class="forecast-note" id="forecastNote"></p>
     </div>
+
+    <!-- Model info panel -->
+    <div class="section">
+      <div class="section-title">Model details</div>
+      <div id="modelInfoPanel">
+        <div class="model-panel">
+          <div class="model-panel-title">Ensemble weights (from cross-validation)</div>
+          <div id="weightBars"></div>
+        </div>
+        <div class="chip-row" id="modelChips"></div>
+      </div>
+    </div>
+
     <div class="section">
       <div class="section-title">Event impact summary</div>
       <div id="eventSummary" style="font-size:13px;color:var(--color-text-secondary);">No events added.</div>
     </div>
+
     <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
       <button class="btn" onclick="showTab('events')">&larr; Edit events</button>
       <button class="btn" id="saveBtn" onclick="saveForecast()">Save &amp; get shareable link</button>
@@ -287,6 +329,7 @@
   var toggles = { product: false, sale: false, custholiday: false };
   var uploadedFile = null;
   var chartInstance = null;
+  var uploadedRowCount = 0;
 
   function initToggles() {
     ['product','sale','custholiday'].forEach(function(name) {
@@ -320,31 +363,34 @@
   }
 
   function addEvent(type) {
-    var name, date, spike, duration, endDate;
+    var name, date, spike, duration, endDate, windowDays;
     if (type === 'product') {
       if (!toggles.product) return;
       name = document.getElementById('prodName').value.trim();
       date = document.getElementById('prodDate').value;
       spike = parseFloat(document.getElementById('prodSpike').value);
       duration = parseInt(document.getElementById('prodDuration').value);
+      windowDays = parseInt(document.getElementById('prodWindow').value) || 2;
       if (!name || !date) return;
       var end = new Date(date); end.setDate(end.getDate() + duration - 1);
-      events.product.push({ name: name, date: date, endDate: end.toISOString().split('T')[0], spike: spike, duration: duration });
+      events.product.push({ name: name, date: date, endDate: end.toISOString().split('T')[0], spike: spike, duration: duration, window: windowDays });
     } else if (type === 'sale') {
       if (!toggles.sale) return;
       name = document.getElementById('saleName').value.trim();
       date = document.getElementById('saleStart').value;
       endDate = document.getElementById('saleEnd').value;
       spike = parseFloat(document.getElementById('saleSpike').value);
+      windowDays = parseInt(document.getElementById('saleWindow').value) || 3;
       if (!name || !date || !endDate) return;
-      events.sale.push({ name: name, date: date, endDate: endDate, spike: spike });
+      events.sale.push({ name: name, date: date, endDate: endDate, spike: spike, window: windowDays });
     } else {
       if (!toggles.custholiday) return;
       name = document.getElementById('holidayName').value.trim();
       date = document.getElementById('holidayDate').value;
       spike = parseFloat(document.getElementById('holidaySpike').value);
+      windowDays = parseInt(document.getElementById('holidayWindow').value) || 1;
       if (!name || !date) return;
-      events.holiday.push({ name: name, date: date, endDate: date, spike: spike });
+      events.holiday.push({ name: name, date: date, endDate: date, spike: spike, window: windowDays });
     }
     renderTags(type);
   }
@@ -375,16 +421,28 @@
       var lines = e.target.result.trim().split('\n');
       var headers = lines[0].toLowerCase().split(',').map(function(h){ return h.trim(); });
       var hasOrders = headers.indexOf('orders') !== -1;
-      var hasRevenue = headers.indexOf('revenue') !== -1;
-      var rowCount = lines.length - 1;
+      var hasRevenue = headers.indexOf('revenue') !== -1 || headers.indexOf('sales') !== -1;
+      uploadedRowCount = lines.length - 1;
+
       var regressors = [];
       if (hasOrders) regressors.push('orders');
-      if (hasRevenue) regressors.push('revenue (AUD)');
-      var msg = 'Loaded ' + rowCount + ' days of data.';
-      if (regressors.length) msg += ' Regressors detected: ' + regressors.join(', ') + '.';
-      else msg += ' No regressors detected — add orders and revenue columns for higher accuracy.';
+      if (hasRevenue) regressors.push('revenue');
+
+      var msg = 'Loaded ' + uploadedRowCount + ' days of data.';
+      if (regressors.length) msg += ' Regressors detected: ' + regressors.join(', ') + ' — will be used as true covariates.';
+      else msg += ' No regressors detected. Add orders and/or revenue columns for higher accuracy.';
       document.getElementById('dataStatus').textContent = msg;
       document.getElementById('dataStatus').className = 'data-status status-ok';
+
+      // Warn about seasonality limitations
+      var warnEl = document.getElementById('dataWarning');
+      if (uploadedRowCount < 730) {
+        var daysNeeded = 730 - uploadedRowCount;
+        warnEl.textContent = uploadedRowCount + ' days of history — annual seasonality (MSTL) requires 730+ days. Model will use weekly seasonality only. ' + daysNeeded + ' more days needed for annual pattern detection.';
+        warnEl.style.display = '';
+      } else {
+        warnEl.style.display = 'none';
+      }
     };
     reader.readAsText(file);
   }
@@ -397,7 +455,6 @@
       return;
     }
 
-    // If no file object stored, try reading from the file input directly
     if (!uploadedFile) {
       var fileInput = document.getElementById('fileInput');
       if (fileInput && fileInput.files && fileInput.files.length > 0) {
@@ -414,30 +471,51 @@
     var btn = document.getElementById('runBtn');
     btn.textContent = 'Running forecast...';
     btn.disabled = true;
-    console.log('Sending forecast request to:', apiUrl + '/forecast');
-    console.log('File:', uploadedFile.name, uploadedFile.size, 'bytes');
 
-    // Build event list for API
+    // Build event list — pass as training regressors with window information.
+    // spike_pct is stored for display purposes; the model learns the actual
+    // magnitude from historical data, not from this value.
     var allEvents = [];
     if (toggles.product) {
       events.product.forEach(function(ev) {
-        allEvents.push({ name: ev.name, start_date: ev.date, end_date: ev.endDate, spike_pct: ev.spike, event_type: 'product' });
+        allEvents.push({
+          name: ev.name,
+          start_date: ev.date,
+          end_date: ev.endDate,
+          spike_pct: ev.spike,        // for display/summary only
+          event_type: 'product',
+          window_days: ev.window || 2,
+        });
       });
     }
     if (toggles.sale) {
       events.sale.forEach(function(ev) {
-        allEvents.push({ name: ev.name, start_date: ev.date, end_date: ev.endDate, spike_pct: ev.spike, event_type: 'sale' });
+        allEvents.push({
+          name: ev.name,
+          start_date: ev.date,
+          end_date: ev.endDate,
+          spike_pct: ev.spike,
+          event_type: 'sale',
+          window_days: ev.window || 3,
+        });
       });
     }
     if (toggles.custholiday) {
       events.holiday.forEach(function(ev) {
-        allEvents.push({ name: ev.name, start_date: ev.date, end_date: ev.endDate, spike_pct: ev.spike, event_type: 'holiday' });
+        allEvents.push({
+          name: ev.name,
+          start_date: ev.date,
+          end_date: ev.endDate,
+          spike_pct: ev.spike,
+          event_type: 'holiday',
+          window_days: ev.window || 1,
+        });
       });
     }
 
     var params = {
       horizon_days: parseInt(document.getElementById('horizon').value),
-      events: allEvents
+      events: allEvents,
     };
 
     var formData = new FormData();
@@ -461,73 +539,72 @@
     }
   }
 
-  function applyClientMultipliers(forecast) {
-    // Build a lookup of date -> {name, type, mult}
-    var dateMap = {};
-    var allEvs = [];
-    if (toggles.product)     events.product.forEach(function(e){ allEvs.push({name:e.name,type:'product',start:e.date,end:e.endDate,mult:1+e.spike/100}); });
-    if (toggles.sale)        events.sale.forEach(function(e){    allEvs.push({name:e.name,type:'sale',   start:e.date,end:e.endDate,mult:1+e.spike/100}); });
-    if (toggles.custholiday) events.holiday.forEach(function(e){ allEvs.push({name:e.name,type:'holiday',start:e.date,end:e.endDate,mult:1+e.spike/100}); });
+  // ---------------------------------------------------------------------------
+  // NOTE: applyClientMultipliers has been removed.
+  // Events are now encoded as binary regressors during model training so the
+  // model learns their actual magnitude from historical data. The backend
+  // applies BFCM handling automatically. Client-side post-hoc multipliers are
+  // no longer used.
+  // ---------------------------------------------------------------------------
 
-    // BFCM hardcoded
-    var bfcm = {'11-27':{name:'Thanksgiving',type:'bfcm',mult:1.40},'11-28':{name:'Black Friday',type:'bfcm',mult:1.19},'11-29':{name:'Small Business Saturday',type:'bfcm',mult:1.08},'12-01':{name:'Cyber Monday',type:'bfcm',mult:1.15}};
-
-    return forecast.map(function(p) {
-      var d = new Date(p.date);
-      var mmdd = String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-      var ev = null;
-
-      // Check BFCM
-      if (bfcm[mmdd]) ev = bfcm[mmdd];
-
-      // Check custom events (overrides BFCM if both match)
-      allEvs.forEach(function(e) {
-        if (p.date >= e.start && p.date <= e.end) ev = e;
-      });
-
-      if (ev) {
-        return {
-          date: p.date,
-          forecast: Math.round(p.forecast * ev.mult),
-          lower:    Math.round(p.lower    * ev.mult),
-          upper:    Math.round(p.upper    * ev.mult),
-          event:      ev.name,
-          event_type: ev.type,
-        };
+  // Map event type to date range for chart coloring
+  function buildEventDateMap(allEvents) {
+    var map = {};
+    allEvents.forEach(function(ev) {
+      var start = new Date(ev.start_date);
+      var end = new Date(ev.end_date);
+      for (var d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        var key = d.toISOString().split('T')[0];
+        map[key] = { name: ev.name, type: ev.event_type };
       }
-      return p;
     });
+    // BFCM dates (hardcoded for chart coloring only — no magnitude applied)
+    var bfcmDates = { '11-28': 'Black Friday', '11-29': 'Small Business Saturday', '12-02': 'Cyber Monday' };
+    return { map: map, bfcm: bfcmDates };
   }
 
   function renderForecast(data) {
-    var forecast = applyClientMultipliers(data.forecast);
+    var forecast = data.forecast;
     var info = data.model_info;
     lastForecast = forecast;
     lastModelInfo = info;
+
     var exportBtn = document.getElementById('exportBtn');
     if (exportBtn) exportBtn.style.display = '';
+
+    // Build event lookup for chart coloring
+    var allEvents = [];
+    if (toggles.product)     events.product.forEach(function(e){ allEvents.push({name:e.name, start_date:e.date, end_date:e.endDate, event_type:'product'}); });
+    if (toggles.sale)        events.sale.forEach(function(e){    allEvents.push({name:e.name, start_date:e.date, end_date:e.endDate, event_type:'sale'}); });
+    if (toggles.custholiday) events.holiday.forEach(function(e){ allEvents.push({name:e.name, start_date:e.date, end_date:e.endDate, event_type:'holiday'}); });
+    var eventLookup = buildEventDateMap(allEvents);
 
     var labels = forecast.map(function(p){ return p.date; });
     var values = forecast.map(function(p){ return p.forecast; });
     var lowers = forecast.map(function(p){ return p.lower; });
     var uppers = forecast.map(function(p){ return p.upper; });
+
     var eventNames = {};
     var eventTypes = {};
-    forecast.forEach(function(p, i){
-      if (p.event) { eventNames[i] = p.event; eventTypes[i] = p.event_type; }
+    forecast.forEach(function(p, i) {
+      var mmdd = p.date.slice(5);  // MM-DD
+      if (eventLookup.map[p.date]) {
+        eventNames[i] = eventLookup.map[p.date].name;
+        eventTypes[i] = eventLookup.map[p.date].type;
+      } else if (eventLookup.bfcm[mmdd]) {
+        eventNames[i] = eventLookup.bfcm[mmdd];
+        eventTypes[i] = 'bfcm';
+      }
     });
 
-    // Color by event type
     var COLOR_MAP = {
-      'product': '#BA7517',  // amber/orange — product launch
-      'sale':    '#EF9F27',  // yellow-amber — sale period
-      'holiday': '#5DCAA5',  // teal — custom holiday
-      'bfcm':    '#D85A30',  // coral — BFCM
-      'normal':  '#378ADD',  // blue — normal day
+      'product': '#BA7517',
+      'sale':    '#EF9F27',
+      'holiday': '#5DCAA5',
+      'bfcm':    '#D85A30',
+      'normal':  '#378ADD',
     };
-    var colors = values.map(function(_, i){
-      return COLOR_MAP[eventTypes[i]] || COLOR_MAP['normal'];
-    });
+    var colors = values.map(function(_, i){ return COLOR_MAP[eventTypes[i]] || COLOR_MAP['normal']; });
 
     var avg = Math.round(values.reduce(function(a,b){return a+b;},0) / values.length);
     var peak = Math.max.apply(null, values);
@@ -539,21 +616,28 @@
     document.getElementById('m-peakdate').textContent = labels[peakIdx];
     document.getElementById('m-total').textContent = total.toLocaleString();
 
+    // Forecast note
     var regressorStr = info.regressors && info.regressors.length
       ? 'Regressors: ' + info.regressors.join(', ') + '. '
       : 'No regressors used. ';
     document.getElementById('forecastNote').textContent =
-      'Model trained on ' + info.training_rows + ' days (' + info.training_from + ' to ' + info.training_to + '). ' +
-      regressorStr + 'Shaded band = 80% confidence interval.';
+      'Trained on ' + info.training_rows + ' days (' + info.training_from + ' to ' + info.training_to + '). ' +
+      regressorStr + 'Shaded band = 80% ' + (info.interval_type || 'conformal') + ' prediction interval.';
+
+    // Render ensemble weight bars
+    renderWeightBars(info.ensemble_weights || {}, info.cv_errors || {});
+
+    // Model chips
+    renderModelChips(info);
 
     // Event summary
     var eventsUsed = [];
-    if (toggles.product) events.product.forEach(function(e){ eventsUsed.push('Product launch: ' + e.name + ' (+' + e.spike + '%)'); });
-    if (toggles.sale) events.sale.forEach(function(e){ eventsUsed.push('Sale: ' + e.name + ' (+' + e.spike + '%)'); });
-    if (toggles.custholiday) events.holiday.forEach(function(e){ eventsUsed.push('Custom: ' + e.name + ' (' + (e.spike>0?'+':'') + e.spike + '%)'); });
+    if (toggles.product) events.product.forEach(function(e){ eventsUsed.push('Product launch: ' + e.name + ' (model-learned magnitude)'); });
+    if (toggles.sale)    events.sale.forEach(function(e){    eventsUsed.push('Sale: ' + e.name + ' (model-learned magnitude)'); });
+    if (toggles.custholiday) events.holiday.forEach(function(e){ eventsUsed.push('Custom: ' + e.name + ' (' + (e.spike>0?'+':'') + e.spike + '% user-specified; model refines from history)'); });
     document.getElementById('eventSummary').innerHTML = eventsUsed.length
       ? eventsUsed.map(function(e){ return '<div style="padding:4px 0;border-bottom:0.5px solid var(--color-border-tertiary);">'+e+'</div>'; }).join('')
-      : 'No custom events enabled.';
+      : 'No custom events enabled. BFCM dates are handled automatically when they fall in the forecast window.';
 
     if (chartInstance) chartInstance.destroy();
     var ctx = document.getElementById('forecastChart').getContext('2d');
@@ -604,8 +688,8 @@
               afterBody: function(items){
                 var idx = items[0].dataIndex;
                 var lines = [
-                  'Lower: ' + lowers[idx].toLocaleString(),
-                  'Upper: ' + uppers[idx].toLocaleString()
+                  'Lower 80%: ' + lowers[idx].toLocaleString(),
+                  'Upper 80%: ' + uppers[idx].toLocaleString()
                 ];
                 if (eventNames[idx]) lines.push('Event: ' + eventNames[idx] + ' (' + (eventTypes[idx] || '') + ')');
                 return lines;
@@ -621,7 +705,37 @@
     });
   }
 
-  // Current forecast data for export/save
+  function renderWeightBars(weights, errors) {
+    var container = document.getElementById('weightBars');
+    var entries = Object.entries(weights).sort(function(a,b){ return b[1]-a[1]; });
+    if (!entries.length) { container.innerHTML = '<p style="font-size:12px;color:var(--color-text-tertiary);">No weight data available.</p>'; return; }
+
+    container.innerHTML = entries.map(function(pair) {
+      var model = pair[0];
+      var w = pair[1];
+      var pct = Math.round(w * 100);
+      var err = errors[model];
+      var errStr = (err != null && !isNaN(err)) ? 'MAE ' + err : '—';
+      return '<div class="weight-bar-row">' +
+        '<span class="weight-bar-label">' + model + '</span>' +
+        '<div class="weight-bar-track"><div class="weight-bar-fill" style="width:' + pct + '%"></div></div>' +
+        '<span class="weight-bar-pct">' + pct + '%</span>' +
+        '<span class="weight-bar-err">' + errStr + '</span>' +
+        '</div>';
+    }).join('');
+  }
+
+  function renderModelChips(info) {
+    var chips = [];
+    chips.push('<span class="chip chip-blue">' + (info.seasonality || 'weekly') + ' seasonality</span>');
+    chips.push('<span class="chip ' + (info.interval_type === 'conformal' ? 'chip-green' : 'chip-blue') + '">' +
+      (info.interval_type === 'conformal' ? 'conformal intervals' : 'parametric intervals') + '</span>');
+    if (info.exogenous_used) chips.push('<span class="chip chip-amber">exogenous regressors active</span>');
+    if (info.has_annual) chips.push('<span class="chip chip-green">annual seasonality (MSTL)</span>');
+    document.getElementById('modelChips').innerHTML = chips.join('');
+  }
+
+  // State for export/save
   var lastForecast = null;
   var lastModelInfo = null;
 
@@ -636,15 +750,15 @@
     btn.disabled = true;
 
     var allEvents = [];
-    if (toggles.product) events.product.forEach(function(ev){ allEvents.push({name:ev.name,start_date:ev.date,end_date:ev.endDate,spike_pct:ev.spike,event_type:'product'}); });
-    if (toggles.sale) events.sale.forEach(function(ev){ allEvents.push({name:ev.name,start_date:ev.date,end_date:ev.endDate,spike_pct:ev.spike,event_type:'sale'}); });
-    if (toggles.custholiday) events.holiday.forEach(function(ev){ allEvents.push({name:ev.name,start_date:ev.date,end_date:ev.endDate,spike_pct:ev.spike,event_type:'holiday'}); });
+    if (toggles.product)     events.product.forEach(function(ev){ allEvents.push({name:ev.name,start_date:ev.date,end_date:ev.endDate,spike_pct:ev.spike,event_type:'product',window_days:ev.window||2}); });
+    if (toggles.sale)        events.sale.forEach(function(ev){    allEvents.push({name:ev.name,start_date:ev.date,end_date:ev.endDate,spike_pct:ev.spike,event_type:'sale',window_days:ev.window||3}); });
+    if (toggles.custholiday) events.holiday.forEach(function(ev){ allEvents.push({name:ev.name,start_date:ev.date,end_date:ev.endDate,spike_pct:ev.spike,event_type:'holiday',window_days:ev.window||1}); });
 
     var formData = new FormData();
     formData.append('file', uploadedFile);
     formData.append('params', JSON.stringify({
       horizon_days: parseInt(document.getElementById('horizon').value),
-      events: allEvents
+      events: allEvents,
     }));
 
     try {
@@ -698,8 +812,7 @@
       var data = await resp.json();
       renderForecast(data);
       showTab('forecast');
-      var shareUrl = window.location.href;
-      document.getElementById('shareUrl').value = shareUrl;
+      document.getElementById('shareUrl').value = window.location.href;
       document.getElementById('shareBox').style.display = '';
     } catch(e) {
       console.error('Failed to load forecast from URL:', e);
