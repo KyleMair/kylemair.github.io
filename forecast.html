@@ -133,7 +133,7 @@
         <div class="upload-hint">Columns: date, tickets, orders, revenue &mdash; e.g. 2024-01-15, 142, 38, 6840.00</div>
       </div>
       <input type="file" id="fileInput" accept=".csv" onchange="handleFileUpload(event)" />
-      <div id="dataStatus" class="data-status status-demo">No data uploaded. Upload a CSV to run a forecast.</div>
+      <div id="dataStatus" class="data-status status-demo">No data uploaded. Upload a CSV to run a Prophet forecast.</div>
     </div>
 
     <div class="section">
@@ -144,7 +144,7 @@
           <input type="text" id="apiUrl" placeholder="https://your-app.onrender.com" style="width:100%;" />
         </div>
       </div>
-      <p style="font-size:12px;color:var(--color-text-secondary);margin-top:6px;">Deploy the backend to Render and paste your URL here. The app will send your CSV and event config to the API and render the forecast.</p>
+      <p style="font-size:12px;color:var(--color-text-secondary);margin-top:6px;">Deploy the backend to Render and paste your URL here. The app will send your CSV and event config to the API and render the Prophet forecast.</p>
     </div>
 
     <div class="section">
@@ -169,7 +169,7 @@
     <div class="section">
       <div class="section-title">Automatic modifiers <span style="font-size:12px;font-weight:400;color:var(--color-text-tertiary);">— always applied</span></div>
       <div class="form-row">
-        <div class="col"><label>Weekend dip (%)</label><input type="number" id="weekendDip" value="15" min="0" max="80" style="width:100px;" /></div>
+        <div class="col"><label>Weekend dip (%)</label><input type="number" id="weekendDip" value="29" min="0" max="80" style="width:100px;" /></div>
         <div class="col" style="justify-content:flex-end;"><p style="font-size:12px;color:var(--color-text-secondary);padding-bottom:6px;">Seasonality &amp; holiday impacts calibrated from your data</p></div>
       </div>
     </div>
@@ -256,6 +256,13 @@
     <div class="section">
       <div class="section-title">Daily ticket forecast</div>
       <div class="chart-wrap"><canvas id="forecastChart"></canvas></div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;">
+        <span style="font-size:12px;color:var(--color-text-secondary);display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:2px;background:#378ADD;display:inline-block;"></span>Normal</span>
+        <span style="font-size:12px;color:var(--color-text-secondary);display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:2px;background:#BA7517;display:inline-block;"></span>Product launch</span>
+        <span style="font-size:12px;color:var(--color-text-secondary);display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:2px;background:#EF9F27;display:inline-block;"></span>Sale period</span>
+        <span style="font-size:12px;color:var(--color-text-secondary);display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:2px;background:#D85A30;display:inline-block;"></span>BFCM</span>
+        <span style="font-size:12px;color:var(--color-text-secondary);display:flex;align-items:center;gap:5px;"><span style="width:12px;height:12px;border-radius:2px;background:#5DCAA5;display:inline-block;"></span>Custom holiday</span>
+      </div>
       <p class="forecast-note" id="forecastNote"></p>
     </div>
     <div class="section">
@@ -417,17 +424,17 @@
     var allEvents = [];
     if (toggles.product) {
       events.product.forEach(function(ev) {
-        allEvents.push({ name: ev.name, start_date: ev.date, end_date: ev.endDate, spike_pct: ev.spike });
+        allEvents.push({ name: ev.name, start_date: ev.date, end_date: ev.endDate, spike_pct: ev.spike, event_type: 'product' });
       });
     }
     if (toggles.sale) {
       events.sale.forEach(function(ev) {
-        allEvents.push({ name: ev.name, start_date: ev.date, end_date: ev.endDate, spike_pct: ev.spike });
+        allEvents.push({ name: ev.name, start_date: ev.date, end_date: ev.endDate, spike_pct: ev.spike, event_type: 'sale' });
       });
     }
     if (toggles.custholiday) {
       events.holiday.forEach(function(ev) {
-        allEvents.push({ name: ev.name, start_date: ev.date, end_date: ev.endDate, spike_pct: ev.spike });
+        allEvents.push({ name: ev.name, start_date: ev.date, end_date: ev.endDate, spike_pct: ev.spike, event_type: 'holiday' });
       });
     }
 
@@ -470,10 +477,22 @@
     var lowers = forecast.map(function(p){ return p.lower; });
     var uppers = forecast.map(function(p){ return p.upper; });
     var eventNames = {};
-    forecast.forEach(function(p, i){ if (p.event) eventNames[i] = p.event; });
+    var eventTypes = {};
+    forecast.forEach(function(p, i){
+      if (p.event) { eventNames[i] = p.event; eventTypes[i] = p.event_type; }
+    });
 
-    // Colors: amber for event days, blue for normal
-    var colors = values.map(function(_, i){ return eventNames[i] ? '#EF9F27' : '#378ADD'; });
+    // Color by event type
+    var COLOR_MAP = {
+      'product': '#BA7517',  // amber/orange — product launch
+      'sale':    '#EF9F27',  // yellow-amber — sale period
+      'holiday': '#5DCAA5',  // teal — custom holiday
+      'bfcm':    '#D85A30',  // coral — BFCM
+      'normal':  '#378ADD',  // blue — normal day
+    };
+    var colors = values.map(function(_, i){
+      return COLOR_MAP[eventTypes[i]] || COLOR_MAP['normal'];
+    });
 
     var avg = Math.round(values.reduce(function(a,b){return a+b;},0) / values.length);
     var peak = Math.max.apply(null, values);
@@ -490,7 +509,7 @@
       : 'No regressors used. ';
     document.getElementById('forecastNote').textContent =
       'Prophet model trained on ' + info.training_rows + ' days (' + info.training_from + ' to ' + info.training_to + '). ' +
-      regressorStr + 'Shaded band = 80% confidence interval.';
+      regressorStr + 'Shaded band = 80% confidence interval. Model: AutoARIMA + AutoETS ensemble.';
 
     // Event summary
     var eventsUsed = [];
@@ -553,7 +572,7 @@
                   'Lower: ' + lowers[idx].toLocaleString(),
                   'Upper: ' + uppers[idx].toLocaleString()
                 ];
-                if (eventNames[idx]) lines.push('Event: ' + eventNames[idx]);
+                if (eventNames[idx]) lines.push('Event: ' + eventNames[idx] + ' (' + (eventTypes[idx] || '') + ')');
                 return lines;
               }
             }
@@ -582,9 +601,9 @@
     btn.disabled = true;
 
     var allEvents = [];
-    if (toggles.product) events.product.forEach(function(ev){ allEvents.push({name:ev.name,start_date:ev.date,end_date:ev.endDate,spike_pct:ev.spike}); });
-    if (toggles.sale) events.sale.forEach(function(ev){ allEvents.push({name:ev.name,start_date:ev.date,end_date:ev.endDate,spike_pct:ev.spike}); });
-    if (toggles.custholiday) events.holiday.forEach(function(ev){ allEvents.push({name:ev.name,start_date:ev.date,end_date:ev.endDate,spike_pct:ev.spike}); });
+    if (toggles.product) events.product.forEach(function(ev){ allEvents.push({name:ev.name,start_date:ev.date,end_date:ev.endDate,spike_pct:ev.spike,event_type:'product'}); });
+    if (toggles.sale) events.sale.forEach(function(ev){ allEvents.push({name:ev.name,start_date:ev.date,end_date:ev.endDate,spike_pct:ev.spike,event_type:'sale'}); });
+    if (toggles.custholiday) events.holiday.forEach(function(ev){ allEvents.push({name:ev.name,start_date:ev.date,end_date:ev.endDate,spike_pct:ev.spike,event_type:'holiday'}); });
 
     var formData = new FormData();
     formData.append('file', uploadedFile);
