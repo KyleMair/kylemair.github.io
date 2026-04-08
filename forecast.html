@@ -133,7 +133,7 @@
         <div class="upload-hint">Columns: date, tickets, orders, revenue &mdash; e.g. 2024-01-15, 142, 38, 6840.00</div>
       </div>
       <input type="file" id="fileInput" accept=".csv" onchange="handleFileUpload(event)" />
-      <div id="dataStatus" class="data-status status-demo">No data uploaded. Upload a CSV to run the forecast.</div>
+      <div id="dataStatus" class="data-status status-demo">No data uploaded. Upload a CSV to run a Prophet forecast.</div>
     </div>
 
     <div class="section">
@@ -262,8 +262,17 @@
       <div class="section-title">Event impact summary</div>
       <div id="eventSummary" style="font-size:13px;color:var(--color-text-secondary);">No events added.</div>
     </div>
-    <div style="display:flex;gap:8px;margin-top:4px;">
+    <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
       <button class="btn" onclick="showTab('events')">&larr; Edit events</button>
+      <button class="btn" id="saveBtn" onclick="saveForecast()">Save &amp; get shareable link</button>
+      <button class="btn" id="exportBtn" onclick="exportCSV()" style="display:none;">Export CSV</button>
+    </div>
+    <div id="shareBox" style="display:none;margin-top:12px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px;">
+      <p style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;">Shareable link — anyone with this URL can view this forecast:</p>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="text" id="shareUrl" readonly style="flex:1;font-size:12px;background:var(--color-background-primary);" />
+        <button class="btn btn-sm" onclick="copyLink()">Copy</button>
+      </div>
     </div>
   </div>
 </div>
@@ -451,6 +460,10 @@
   function renderForecast(data) {
     var forecast = data.forecast;
     var info = data.model_info;
+    lastForecast = forecast;
+    lastModelInfo = info;
+    var exportBtn = document.getElementById('exportBtn');
+    if (exportBtn) exportBtn.style.display = '';
 
     var labels = forecast.map(function(p){ return p.date; });
     var values = forecast.map(function(p){ return p.forecast; });
@@ -554,7 +567,93 @@
     });
   }
 
+  // Current forecast data for export/save
+  var lastForecast = null;
+  var lastModelInfo = null;
+
+  async function saveForecast() {
+    var apiUrl = document.getElementById('apiUrl').value.trim().replace(/\/+$/, '');
+    if (!apiUrl) { alert('No API URL set.'); return; }
+    if (!uploadedFile) { alert('No CSV uploaded.'); return; }
+    if (!lastForecast) { alert('Run a forecast first.'); return; }
+
+    var btn = document.getElementById('saveBtn');
+    btn.textContent = 'Saving...';
+    btn.disabled = true;
+
+    var allEvents = [];
+    if (toggles.product) events.product.forEach(function(ev){ allEvents.push({name:ev.name,start_date:ev.date,end_date:ev.endDate,spike_pct:ev.spike}); });
+    if (toggles.sale) events.sale.forEach(function(ev){ allEvents.push({name:ev.name,start_date:ev.date,end_date:ev.endDate,spike_pct:ev.spike}); });
+    if (toggles.custholiday) events.holiday.forEach(function(ev){ allEvents.push({name:ev.name,start_date:ev.date,end_date:ev.endDate,spike_pct:ev.spike}); });
+
+    var formData = new FormData();
+    formData.append('file', uploadedFile);
+    formData.append('params', JSON.stringify({
+      horizon_days: parseInt(document.getElementById('horizon').value),
+      events: allEvents
+    }));
+
+    try {
+      var resp = await fetch(apiUrl + '/forecast/save', { method: 'POST', body: formData });
+      if (!resp.ok) throw new Error('Save failed: ' + resp.status);
+      var data = await resp.json();
+      var shareUrl = window.location.origin + window.location.pathname + '?id=' + data.id + '&api=' + encodeURIComponent(apiUrl);
+      document.getElementById('shareUrl').value = shareUrl;
+      document.getElementById('shareBox').style.display = '';
+    } catch(e) {
+      alert('Save failed: ' + e.message);
+    } finally {
+      btn.textContent = 'Save & get shareable link';
+      btn.disabled = false;
+    }
+  }
+
+  function copyLink() {
+    var input = document.getElementById('shareUrl');
+    input.select();
+    document.execCommand('copy');
+    var btn = event.target;
+    btn.textContent = 'Copied!';
+    setTimeout(function(){ btn.textContent = 'Copy'; }, 2000);
+  }
+
+  function exportCSV() {
+    if (!lastForecast) return;
+    var rows = ['date,forecast,lower_80,upper_80,event'];
+    lastForecast.forEach(function(p) {
+      rows.push([p.date, p.forecast, p.lower, p.upper, p.event || ''].join(','));
+    });
+    var blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'ticket_forecast_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+  }
+
+  async function loadForecastFromUrl() {
+    var params = new URLSearchParams(window.location.search);
+    var id = params.get('id');
+    var api = params.get('api');
+    if (!id || !api) return;
+
+    document.getElementById('apiUrl').value = decodeURIComponent(api);
+
+    try {
+      var resp = await fetch(decodeURIComponent(api) + '/forecast/' + id);
+      if (!resp.ok) { alert('Could not load forecast: ' + id); return; }
+      var data = await resp.json();
+      renderForecast(data);
+      showTab('forecast');
+      var shareUrl = window.location.href;
+      document.getElementById('shareUrl').value = shareUrl;
+      document.getElementById('shareBox').style.display = '';
+    } catch(e) {
+      console.error('Failed to load forecast from URL:', e);
+    }
+  }
+
   initToggles();
+  loadForecastFromUrl();
 </script>
 </body>
 </html>
