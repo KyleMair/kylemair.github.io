@@ -613,6 +613,8 @@
 
         for (var i = 0; i < parts.length; i++) {
           var line = parts[i].trim();
+          // Skip SSE keep-alive comments (lines starting with ':')
+          if (line.startsWith(':')) continue;
           if (!line.startsWith('data:')) continue;
           var payload = line.slice(5).trim();
 
