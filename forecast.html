@@ -133,6 +133,22 @@
     .interval-conformal { background: var(--color-background-success); color: var(--color-text-success); }
     .interval-parametric { background: var(--color-background-info); color: var(--color-text-info); }
 
+    /* Progress bar */
+    .progress-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:100; align-items:center; justify-content:center; }
+    .progress-overlay.visible { display:flex; }
+    .progress-card { background:var(--color-background-primary); border-radius:var(--border-radius-lg); padding:1.5rem 2rem; width:min(420px,90vw); box-shadow:0 8px 32px rgba(0,0,0,0.18); }
+    .progress-title { font-size:15px; font-weight:500; color:var(--color-text-primary); margin-bottom:1rem; }
+    .progress-track { height:6px; background:var(--color-border-tertiary); border-radius:3px; overflow:hidden; margin-bottom:12px; }
+    .progress-fill { height:100%; border-radius:3px; background:#378ADD; width:0%; transition:width 0.4s ease; }
+    .progress-msg { font-size:13px; color:var(--color-text-secondary); min-height:20px; }
+    .progress-steps { margin-top:12px; display:flex; flex-direction:column; gap:5px; max-height:140px; overflow-y:auto; }
+    .progress-step { font-size:12px; color:var(--color-text-tertiary); display:flex; align-items:flex-start; gap:6px; }
+    .progress-step.done { color:var(--color-text-success); }
+    .progress-step.active { color:var(--color-text-primary); font-weight:500; }
+    .step-dot { width:6px; height:6px; border-radius:50%; margin-top:5px; flex-shrink:0; background:var(--color-border-secondary); }
+    .progress-step.done .step-dot { background:#639922; }
+    .progress-step.active .step-dot { background:#378ADD; }
+
     @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } .form-row { flex-direction: column; align-items: stretch; } }
   </style>
 </head>
@@ -323,6 +339,16 @@
   </div>
 </div>
 
+<!-- Progress overlay -->
+<div class="progress-overlay" id="progressOverlay">
+  <div class="progress-card">
+    <div class="progress-title">Running forecast</div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-msg" id="progressMsg">Starting up...</div>
+    <div class="progress-steps" id="progressSteps"></div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
   var events = { product: [], sale: [], holiday: [] };
@@ -447,6 +473,89 @@
     reader.readAsText(file);
   }
 
+  // Progress bar helpers
+  var PROGRESS_STAGES = [
+    'Loaded',
+    'Seasonality',
+    'Building exogenous',
+    'Configuring conformal',
+    'Cross-validating',
+    'Cross-validation complete',
+    'Fitting models',
+    'Generating',
+    'Assembling',
+  ];
+  var progressStepEls = [];
+
+  function showProgress() {
+    var overlay = document.getElementById('progressOverlay');
+    var stepsEl = document.getElementById('progressSteps');
+    overlay.classList.add('visible');
+    stepsEl.innerHTML = PROGRESS_STAGES.map(function(s, i) {
+      return '<div class="progress-step" id="pstep-'+i+'"><span class="step-dot"></span><span>'+s+'...</span></div>';
+    }).join('');
+    setProgressFill(0);
+    setProgressMsg('Starting up...');
+  }
+
+  function hideProgress() {
+    document.getElementById('progressOverlay').classList.remove('visible');
+  }
+
+  function setProgressFill(pct) {
+    document.getElementById('progressFill').style.width = pct + '%';
+  }
+
+  function setProgressMsg(msg) {
+    document.getElementById('progressMsg').textContent = msg;
+  }
+
+  function tickProgressStep(msg) {
+    // Mark previous active as done, find matching stage
+    document.querySelectorAll('.progress-step.active').forEach(function(el) {
+      el.classList.remove('active');
+      el.classList.add('done');
+    });
+    var matched = -1;
+    PROGRESS_STAGES.forEach(function(s, i) {
+      if (matched === -1 && msg.toLowerCase().indexOf(s.toLowerCase()) !== -1) matched = i;
+    });
+    if (matched !== -1) {
+      var el = document.getElementById('pstep-' + matched);
+      if (el) {
+        el.classList.add('active');
+        el.querySelector('span:last-child').textContent = msg;
+        el.scrollIntoView({ block: 'nearest' });
+      }
+      var pct = Math.round(((matched + 1) / PROGRESS_STAGES.length) * 90);
+      setProgressFill(pct);
+    }
+    setProgressMsg(msg);
+  }
+
+  function buildAllEvents() {
+    var allEvents = [];
+    if (toggles.product) {
+      events.product.forEach(function(ev) {
+        allEvents.push({ name: ev.name, start_date: ev.date, end_date: ev.endDate,
+          spike_pct: ev.spike, event_type: 'product', window_days: ev.window || 2 });
+      });
+    }
+    if (toggles.sale) {
+      events.sale.forEach(function(ev) {
+        allEvents.push({ name: ev.name, start_date: ev.date, end_date: ev.endDate,
+          spike_pct: ev.spike, event_type: 'sale', window_days: ev.window || 3 });
+      });
+    }
+    if (toggles.custholiday) {
+      events.holiday.forEach(function(ev) {
+        allEvents.push({ name: ev.name, start_date: ev.date, end_date: ev.endDate,
+          spike_pct: ev.spike, event_type: 'holiday', window_days: ev.window || 1 });
+      });
+    }
+    return allEvents;
+  }
+
   async function runForecast() {
     var apiUrl = document.getElementById('apiUrl').value.trim().replace(/\/+$/, '');
     if (!apiUrl) {
@@ -461,7 +570,6 @@
         uploadedFile = fileInput.files[0];
       }
     }
-
     if (!uploadedFile) {
       alert('Please upload a CSV file before running the forecast.');
       showTab('data');
@@ -469,53 +577,13 @@
     }
 
     var btn = document.getElementById('runBtn');
-    btn.textContent = 'Running forecast...';
+    btn.textContent = 'Running...';
     btn.disabled = true;
-
-    // Build event list — pass as training regressors with window information.
-    // spike_pct is stored for display purposes; the model learns the actual
-    // magnitude from historical data, not from this value.
-    var allEvents = [];
-    if (toggles.product) {
-      events.product.forEach(function(ev) {
-        allEvents.push({
-          name: ev.name,
-          start_date: ev.date,
-          end_date: ev.endDate,
-          spike_pct: ev.spike,        // for display/summary only
-          event_type: 'product',
-          window_days: ev.window || 2,
-        });
-      });
-    }
-    if (toggles.sale) {
-      events.sale.forEach(function(ev) {
-        allEvents.push({
-          name: ev.name,
-          start_date: ev.date,
-          end_date: ev.endDate,
-          spike_pct: ev.spike,
-          event_type: 'sale',
-          window_days: ev.window || 3,
-        });
-      });
-    }
-    if (toggles.custholiday) {
-      events.holiday.forEach(function(ev) {
-        allEvents.push({
-          name: ev.name,
-          start_date: ev.date,
-          end_date: ev.endDate,
-          spike_pct: ev.spike,
-          event_type: 'holiday',
-          window_days: ev.window || 1,
-        });
-      });
-    }
+    showProgress();
 
     var params = {
       horizon_days: parseInt(document.getElementById('horizon').value),
-      events: allEvents,
+      events: buildAllEvents(),
     };
 
     var formData = new FormData();
@@ -523,15 +591,52 @@
     formData.append('params', JSON.stringify(params));
 
     try {
-      var resp = await fetch(apiUrl + '/forecast', { method: 'POST', body: formData });
+      var resp = await fetch(apiUrl + '/forecast/stream', { method: 'POST', body: formData });
       if (!resp.ok) {
-        var err = await resp.json();
-        throw new Error(err.detail || 'API error ' + resp.status);
+        var errData = await resp.json().catch(function(){ return {}; });
+        throw new Error(errData.detail || 'API error ' + resp.status);
       }
-      var data = await resp.json();
-      renderForecast(data);
+
+      var reader = resp.body.getReader();
+      var decoder = new TextDecoder();
+      var buffer = '';
+      var resultData = null;
+
+      while (true) {
+        var chunk = await reader.read();
+        if (chunk.done) break;
+        buffer += decoder.decode(chunk.value, { stream: true });
+
+        // SSE events are separated by double newline
+        var parts = buffer.split('\n\n');
+        buffer = parts.pop(); // keep incomplete last chunk
+
+        for (var i = 0; i < parts.length; i++) {
+          var line = parts[i].trim();
+          if (!line.startsWith('data:')) continue;
+          var payload = line.slice(5).trim();
+
+          if (payload.startsWith('RESULT:')) {
+            resultData = JSON.parse(payload.slice(7));
+          } else if (payload.startsWith('ERROR:')) {
+            throw new Error(payload.slice(6));
+          } else {
+            tickProgressStep(payload);
+          }
+        }
+      }
+
+      if (!resultData) throw new Error('No result received from server');
+
+      setProgressFill(100);
+      setProgressMsg('Complete!');
+      await new Promise(function(r){ setTimeout(r, 400); });
+      hideProgress();
+      renderForecast(resultData);
       showTab('forecast');
+
     } catch(e) {
+      hideProgress();
       alert('Forecast failed: ' + e.message + '\n\nMake sure your Render API is running and the URL is correct.');
     } finally {
       btn.textContent = 'Run forecast \u2192';
