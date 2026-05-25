@@ -3,174 +3,199 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Fault Ledger · Browse</title>
+<title>Quad Lock · Data Browser</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Archivo:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ink: #1a1814;
-    --ink-soft: #44403a;
-    --ink-muted: #8a8479;
-    --paper: #f4ede0;
-    --paper-warm: #ebe2d0;
-    --rule: #d4cab4;
-    --accent: #b03a2e;
-    --accent-soft: #e8c5bf;
-    --issues-color: #b03a2e;
-    --sales-color: #2e6b4e;
-    --reps-color: #8a5a1f;
-    --font-display: 'Fraunces', Georgia, serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    --ql-red: #E4002B;
+    --ql-red-dark: #B80022;
+    --ql-red-soft: #FFE5EA;
+    --ql-black: #0A0A0A;
+    --ql-grey-900: #1A1A1A;
+    --ql-grey-700: #4A4A4A;
+    --ql-grey-500: #7A7A7A;
+    --ql-grey-300: #C8C8C8;
+    --ql-grey-200: #E5E5E5;
+    --ql-grey-100: #F2F2F2;
+    --ql-grey-50: #FAFAFA;
+    --ql-white: #FFFFFF;
+
+    --bg: var(--ql-white);
+    --surface: var(--ql-grey-50);
+    --ink: var(--ql-black);
+    --ink-soft: var(--ql-grey-700);
+    --ink-muted: var(--ql-grey-500);
+    --rule: var(--ql-grey-200);
+    --accent: var(--ql-red);
+    --good: #00875A;
+
+    /* Metric colors — used sparingly to distinguish the three tables */
+    --c-issues: var(--ql-red);
+    --c-sales: #00875A;
+    --c-reps: #FF8B00;
+
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-display: 'Archivo', 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
-    background: var(--paper);
+    background: var(--bg);
     color: var(--ink);
-    font-family: var(--font-display);
-    font-feature-settings: 'ss01', 'ss02';
+    font-family: var(--font-sans);
+    font-feature-settings: 'ss01', 'cv11';
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background-image:
-      radial-gradient(circle at 20% 10%, rgba(176, 58, 46, 0.04) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(74, 124, 89, 0.04) 0%, transparent 50%),
-      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.09 0 0 0 0 0.08 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-  }
-  .container {
-    position: relative;
-    z-index: 1;
-    max-width: 1600px;
-    margin: 0 auto;
-    padding: 48px 40px 80px;
-  }
+  .container { max-width: 1600px; margin: 0 auto; padding: 40px 32px 80px; }
 
-  /* MASTHEAD */
-  .masthead {
-    border-bottom: 2px solid var(--ink);
-    padding-bottom: 24px;
-    margin-bottom: 8px;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: end;
-    gap: 32px;
+  /* TOP BAR */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--ink);
+    margin-bottom: 32px;
   }
-  .masthead-left, .masthead-right {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--ink-soft);
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand-mark {
+    width: 32px; height: 32px;
+    background: var(--ql-red);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ql-white);
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 16px;
+    letter-spacing: -0.02em;
   }
-  .masthead-right { text-align: right; }
-  .nav-link {
-    color: var(--accent);
-    text-decoration: none;
-    border-bottom: 1px solid currentColor;
-    padding-bottom: 1px;
-    transition: opacity 0.15s;
-  }
-  .nav-link:hover { opacity: 0.7; }
-  .masthead-center { text-align: center; }
-  .masthead-title {
+  .brand-text {
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: clamp(34px, 4.5vw, 60px);
-    line-height: 0.95;
-    letter-spacing: -0.03em;
-    font-variation-settings: 'opsz' 144, 'SOFT' 50;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--ink);
   }
-  .masthead-title em {
-    font-style: italic;
-    font-weight: 400;
-    color: var(--accent);
+  .brand-text span { color: var(--accent); }
+  .topbar-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-muted);
+    display: flex;
+    gap: 24px;
+    align-items: center;
   }
-  .masthead-sub {
+  .topbar-meta a {
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 600;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 2px;
+    transition: color 0.15s;
+  }
+  .topbar-meta a:hover { color: var(--accent); }
+
+  .page-title { margin-bottom: 40px; }
+  .page-eyebrow {
     font-family: var(--font-mono);
     font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.2em;
-    color: var(--ink-muted);
-    margin-top: 12px;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 12px;
   }
-  .rule-double {
-    border-top: 1px solid var(--ink);
-    border-bottom: 1px solid var(--ink);
-    height: 4px;
-    margin-bottom: 32px;
+  .page-title h1 {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(36px, 4.5vw, 56px);
+    line-height: 1;
+    letter-spacing: -0.035em;
+    color: var(--ink);
+  }
+  .page-title .sub {
+    margin-top: 8px;
+    font-size: 15px;
+    color: var(--ink-muted);
+    max-width: 600px;
   }
 
-  /* CONTROLS BAR */
+  /* CONTROLS */
   .controls {
-    background: var(--paper-warm);
-    border: 1px solid var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--rule);
     padding: 20px 24px;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
     display: grid;
     grid-template-columns: 1fr auto auto;
-    gap: 24px;
+    gap: 28px;
     align-items: end;
   }
-  .control-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
+  .control-group { display: flex; flex-direction: column; gap: 6px; }
   .control-label {
     font-family: var(--font-mono);
     font-size: 10px;
     text-transform: uppercase;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.12em;
     color: var(--ink-muted);
+    font-weight: 600;
   }
-  .control-row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
+  .control-row { display: flex; gap: 6px; align-items: center; }
   .control input[type="text"],
   .control input[type="month"] {
-    background: var(--paper);
-    border: 1px solid var(--ink);
+    background: var(--ql-white);
+    border: 1px solid var(--ql-grey-300);
     padding: 10px 14px;
-    font-family: var(--font-mono);
-    font-size: 12px;
+    font-family: var(--font-sans);
+    font-size: 13px;
     color: var(--ink);
     outline: none;
+    transition: border-color 0.15s;
   }
-  .control input[type="text"] { width: 100%; }
-  .control input[type="text"]::placeholder { color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .control input[type="month"] {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+  .control input[type="text"] { width: 100%; min-width: 280px; }
+  .control input[type="text"]::placeholder { color: var(--ink-muted); }
   .control input:focus {
-    background: var(--paper-warm);
-    box-shadow: inset 0 0 0 1px var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--ql-red-soft);
   }
   .preset-btn {
-    background: transparent;
-    border: 1px solid var(--ink);
+    background: var(--ql-white);
+    border: 1px solid var(--ql-grey-300);
     padding: 8px 14px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
     color: var(--ink);
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 0.12s;
   }
-  .preset-btn:hover { background: var(--ink); color: var(--paper); }
-  .preset-btn.active { background: var(--ink); color: var(--paper); }
-  .control-sep { color: var(--ink-muted); font-family: var(--font-mono); font-size: 11px; }
+  .preset-btn:hover { border-color: var(--ink); }
+  .preset-btn.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--ql-white);
+  }
+  .control-sep {
+    color: var(--ink-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
 
   /* MODE TOGGLE */
   .mode-toggle {
     display: flex;
-    margin-bottom: 24px;
-    border: 1px solid var(--ink);
-    background: var(--paper-warm);
-    align-self: stretch;
+    margin-bottom: 32px;
+    border: 1px solid var(--rule);
+    background: var(--ql-white);
   }
   .mode-btn {
     flex: 1;
@@ -178,129 +203,143 @@
     border: none;
     border-right: 1px solid var(--rule);
     padding: 14px 20px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
     color: var(--ink-soft);
     cursor: pointer;
-    transition: background 0.15s;
+    transition: all 0.12s;
+    text-align: left;
   }
   .mode-btn:last-child { border-right: none; }
-  .mode-btn:hover { background: rgba(176, 58, 46, 0.05); color: var(--ink); }
-  .mode-btn.active { background: var(--ink); color: var(--paper); }
+  .mode-btn:hover { background: var(--ql-grey-50); color: var(--ink); }
+  .mode-btn.active {
+    background: var(--ink);
+    color: var(--ql-white);
+  }
+  .mode-btn-sub {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.6;
+    margin-top: 2px;
+  }
 
-  /* CONTEXT HEADER (shows selected SKU when in timeline mode) */
+  /* CONTEXT (selected SKU bar) */
   .context {
     margin-bottom: 24px;
-    padding: 16px 24px;
+    padding: 18px 24px;
     background: var(--ink);
-    color: var(--paper);
+    color: var(--ql-white);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
+    border-left: 4px solid var(--accent);
   }
   .context-title {
     font-family: var(--font-display);
-    font-size: 22px;
-    font-weight: 600;
-    font-style: italic;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
   }
   .context-meta {
     font-family: var(--font-mono);
     font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.15em;
-    color: rgba(244, 237, 224, 0.7);
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.6);
+    font-weight: 500;
+    margin-top: 2px;
   }
   .clear-link {
-    color: var(--paper);
+    color: var(--ql-white);
     background: transparent;
-    border: 1px solid var(--paper);
-    padding: 6px 12px;
-    font-family: var(--font-mono);
-    font-size: 10px;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 7px 14px;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.08em;
     cursor: pointer;
     text-decoration: none;
     transition: all 0.15s;
   }
-  .clear-link:hover { background: var(--paper); color: var(--ink); }
+  .clear-link:hover { background: var(--ql-white); color: var(--ink); }
 
   /* SECTION */
-  .section {
-    margin-bottom: 48px;
-  }
+  .section { margin-bottom: 40px; }
   .section-head {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--ink);
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--ink);
     flex-wrap: wrap;
     gap: 12px;
   }
   .section-head h2 {
     font-family: var(--font-display);
-    font-style: italic;
-    font-weight: 400;
-    font-size: 28px;
-    letter-spacing: -0.01em;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.015em;
+    text-transform: uppercase;
+    color: var(--ink);
   }
   .section-head h2 .indicator {
     display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-right: 10px;
-    vertical-align: 1px;
+    width: 12px;
+    height: 12px;
+    margin-right: 12px;
+    vertical-align: 0;
   }
-  .section-head h2.issues .indicator { background: var(--issues-color); }
-  .section-head h2.sales .indicator { background: var(--sales-color); }
-  .section-head h2.reps .indicator { background: var(--reps-color); }
+  .section-head h2.issues .indicator { background: var(--c-issues); }
+  .section-head h2.sales .indicator { background: var(--c-sales); }
+  .section-head h2.reps .indicator { background: var(--c-reps); }
   .section-head .actions { display: flex; gap: 12px; align-items: center; }
   .copy-btn {
-    background: transparent;
+    background: var(--ql-white);
     border: 1px solid var(--ink);
-    padding: 6px 12px;
-    font-family: var(--font-mono);
-    font-size: 10px;
+    padding: 7px 14px;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.06em;
     cursor: pointer;
     color: var(--ink);
-    transition: all 0.15s;
+    transition: all 0.12s;
   }
-  .copy-btn:hover { background: var(--ink); color: var(--paper); }
-  .copy-btn.copied { background: var(--sales-color); color: var(--paper); border-color: var(--sales-color); }
+  .copy-btn:hover { background: var(--ink); color: var(--ql-white); }
+  .copy-btn.copied {
+    background: var(--good);
+    color: var(--ql-white);
+    border-color: var(--good);
+  }
   .section-meta {
     font-family: var(--font-mono);
     font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
     color: var(--ink-muted);
+    font-weight: 500;
   }
 
   /* TABLES */
   .table-wrap {
     overflow-x: auto;
-    border: 1px solid var(--ink);
-    background: var(--paper-warm);
+    border: 1px solid var(--rule);
+    background: var(--ql-white);
     max-height: 60vh;
     overflow-y: auto;
   }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: var(--font-mono);
-    font-size: 12px;
-  }
+  table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 12px; }
   thead {
     background: var(--ink);
-    color: var(--paper);
+    color: var(--ql-white);
     position: sticky;
     top: 0;
     z-index: 2;
@@ -308,27 +347,28 @@
   th {
     text-align: right;
     padding: 12px 14px;
-    font-weight: 500;
-    font-size: 10px;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.06em;
     cursor: pointer;
     user-select: none;
     white-space: nowrap;
-    border-right: 1px solid rgba(244, 237, 224, 0.15);
-    transition: background 0.15s;
+    border-right: 1px solid rgba(255,255,255,0.1);
+    transition: background 0.12s;
   }
   th:first-child { text-align: left; }
   th:last-child { border-right: none; }
-  th:hover { background: rgba(255,255,255,0.08); }
+  th:hover { background: var(--ql-grey-900); }
   th .sort-ind { opacity: 0.4; margin-left: 4px; font-size: 9px; }
-  th.sort-asc .sort-ind, th.sort-desc .sort-ind { opacity: 1; }
+  th.sort-asc .sort-ind, th.sort-desc .sort-ind { opacity: 1; color: var(--accent); }
   tbody tr {
     border-bottom: 1px solid var(--rule);
-    transition: background 0.15s;
+    transition: background 0.12s;
     cursor: pointer;
   }
-  tbody tr:hover { background: rgba(176, 58, 46, 0.06); }
+  tbody tr:hover { background: var(--ql-grey-50); }
   tbody tr.no-hover { cursor: default; }
   tbody tr.no-hover:hover { background: transparent; }
   td {
@@ -341,81 +381,71 @@
   }
   td:first-child {
     text-align: left;
-    font-family: var(--font-display);
-    font-weight: 600;
-    color: var(--ink);
-    font-size: 14px;
-    letter-spacing: -0.005em;
-  }
-  td:last-child { border-right: none; }
-  td.zero { color: var(--ink-muted); opacity: 0.5; }
-  td.total {
-    background: var(--paper);
-    font-family: var(--font-display);
+    font-family: var(--font-sans);
     font-weight: 600;
     color: var(--ink);
     font-size: 13px;
   }
+  td:last-child { border-right: none; }
+  td.zero { color: var(--ink-muted); opacity: 0.4; }
+  td.total {
+    background: var(--ql-grey-50);
+    font-family: var(--font-sans);
+    font-weight: 700;
+    color: var(--ink);
+    font-size: 13px;
+  }
 
-  /* Empty state */
   .empty {
     padding: 60px 24px;
     text-align: center;
-    font-family: var(--font-display);
-    font-style: italic;
-    font-size: 18px;
+    font-family: var(--font-sans);
+    font-size: 16px;
     color: var(--ink-muted);
   }
 
   footer {
     margin-top: 64px;
     padding-top: 24px;
-    border-top: 2px solid var(--ink);
+    border-top: 1px solid var(--rule);
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-family: var(--font-mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
+    font-size: 11px;
     color: var(--ink-muted);
     flex-wrap: wrap;
     gap: 12px;
   }
-  footer .ornament {
-    font-family: var(--font-display);
-    font-style: italic;
-    font-size: 18px;
-    color: var(--accent);
-    text-transform: none;
-    letter-spacing: 0;
-  }
 
   @media (max-width: 1000px) {
-    .masthead { grid-template-columns: 1fr; text-align: center; }
-    .masthead-left, .masthead-right { text-align: center; }
     .controls { grid-template-columns: 1fr; }
+    .mode-toggle { flex-direction: column; }
+    .mode-btn { border-right: none; border-bottom: 1px solid var(--rule); }
+    .mode-btn:last-child { border-bottom: none; }
+    .topbar { flex-direction: column; align-items: flex-start; gap: 12px; }
   }
 </style>
 </head>
 <body>
 <div class="container">
 
-  <header class="masthead">
-    <div class="masthead-left">
-      <a href="faults.html" class="nav-link">← Dashboard</a><br>
-      Internal Distribution
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">Q</div>
+      <div class="brand-text">QUAD LOCK <span>·</span> DATA BROWSER</div>
     </div>
-    <div class="masthead-center">
-      <div class="masthead-title">Data <em>Browser</em></div>
-      <div class="masthead-sub">Issues · Sales · Replacements</div>
-    </div>
-    <div class="masthead-right">
-      Published<br>
-      <span id="pub-date">—</span>
+    <div class="topbar-meta">
+      <span>Published <span id="pub-date">—</span></span>
+      <a href="faults.html">← Dashboard</a>
     </div>
   </header>
-  <div class="rule-double"></div>
+
+  <div class="page-title">
+    <div class="page-eyebrow">Self-Service Data Access</div>
+    <h1>Data Browser</h1>
+    <div class="sub">Issues, sales, and replacements broken down by SKU. Filter by date range, copy any table as TSV, or drill into a single product's monthly history.</div>
+  </div>
 
   <section class="controls" id="controls" style="display:none">
     <div class="control control-group">
@@ -444,8 +474,14 @@
   </section>
 
   <div class="mode-toggle">
-    <button class="mode-btn active" data-mode="leaderboard">Leaderboard — totals per SKU in range</button>
-    <button class="mode-btn" data-mode="timeline">Timeline — monthly values for one SKU</button>
+    <button class="mode-btn active" data-mode="leaderboard">
+      Leaderboard
+      <span class="mode-btn-sub">Totals per SKU in range</span>
+    </button>
+    <button class="mode-btn" data-mode="timeline">
+      Timeline
+      <span class="mode-btn-sub">Monthly values for one SKU</span>
+    </button>
   </div>
 
   <div class="context" id="context" style="display:none">
@@ -462,7 +498,6 @@
 
   <footer>
     <div>Source: Google Sheets &middot; Updated monthly via Zapier</div>
-    <div class="ornament">— fin —</div>
     <div id="last-update">—</div>
   </footer>
 </div>
@@ -474,9 +509,8 @@
   let DATA = null;
   let rangeStartIdx = 0;
   let rangeEndIdx = 0;
-  let mode = 'leaderboard'; // 'leaderboard' | 'timeline'
+  let mode = 'leaderboard';
   let selectedSku = null;
-  // Sort state, one per metric
   let sortBy = {
     issues:       { key: 'total', dir: 'desc' },
     sales:        { key: 'total', dir: 'desc' },
@@ -487,10 +521,6 @@
   const fmtMonth = ym => {
     const [y, m] = ym.split('-').map(Number);
     return new Date(Date.UTC(y, m - 1)).toLocaleString('en-US', { month: 'short', year: 'numeric' });
-  };
-  const fmtMonthShort = ym => {
-    const [y, m] = ym.split('-').map(Number);
-    return new Date(Date.UTC(y, m - 1)).toLocaleString('en-US', { month: 'short', year: '2-digit' });
   };
 
   async function load() {
@@ -508,11 +538,10 @@
   function init() {
     const pub = new Date(DATA.generated_at);
     document.getElementById('pub-date').textContent =
-      pub.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      pub.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     document.getElementById('last-update').textContent = 'Last update: ' + pub.toISOString().slice(0, 10);
 
     const months = DATA.months;
-    // Default to last 12 months
     rangeEndIdx = months.length - 1;
     rangeStartIdx = Math.max(0, rangeEndIdx - 11);
 
@@ -548,17 +577,12 @@
       b.addEventListener('click', () => {
         mode = b.dataset.mode;
         document.querySelectorAll('.mode-btn').forEach(x => x.classList.toggle('active', x === b));
-        // Clear SKU selection when switching to leaderboard
         if (mode === 'leaderboard') selectedSku = null;
         render();
       });
     });
 
-    document.getElementById('search').addEventListener('input', () => {
-      // In timeline mode, search picks the SKU; in leaderboard mode, it filters
-      render();
-    });
-
+    document.getElementById('search').addEventListener('input', () => render());
     document.getElementById('clear-sku').addEventListener('click', () => {
       selectedSku = null;
       document.getElementById('search').value = '';
@@ -580,15 +604,11 @@
     else renderTimeline();
   }
 
-  // ============================================================
-  // LEADERBOARD MODE — totals per SKU in selected range
-  // ============================================================
   function renderLeaderboard() {
     document.getElementById('context').style.display = 'none';
     const filter = document.getElementById('search').value.trim().toLowerCase();
     const months = DATA.months;
 
-    // Compute totals for each SKU across the range, for each metric
     const rows = DATA.skus.map(s => {
       let totIss = 0, totSal = 0, totRep = 0;
       for (let i = rangeStartIdx; i <= rangeEndIdx; i++) {
@@ -616,7 +636,6 @@
       const nonZero = sorted.filter(r => r[metric] > 0).length;
       const skuArrow = sb.key === 'sku' ? (sb.dir === 'asc' ? '↑' : '↓') : '↕';
       const totArrow = sb.key === 'total' ? (sb.dir === 'asc' ? '↑' : '↓') : '↕';
-
       return `
         <section class="section">
           <div class="section-head">
@@ -653,7 +672,6 @@
       sectionHtml('sales',        'Sales',                 'sales') +
       sectionHtml('replacements', 'Replacements Issued',   'reps');
 
-    // Wire up: sort headers, copy buttons, row clicks (jumps to timeline mode for that SKU)
     document.querySelectorAll('th[data-metric][data-sort]').forEach(th => {
       th.addEventListener('click', () => {
         const m = th.dataset.metric, k = th.dataset.sort;
@@ -670,36 +688,28 @@
         selectedSku = tr.dataset.sku;
         mode = 'timeline';
         document.querySelectorAll('.mode-btn').forEach(x => x.classList.toggle('active', x.dataset.mode === 'timeline'));
-        // Also fill search so it's clear what was selected
         document.getElementById('search').value = selectedSku;
         render();
       });
     });
   }
 
-  // ============================================================
-  // TIMELINE MODE — monthly values for one SKU
-  // ============================================================
   function renderTimeline() {
     const months = DATA.months;
     const filter = document.getElementById('search').value.trim().toLowerCase();
-
-    // If no SKU selected, try to resolve from search
     let sku = selectedSku;
     if (!sku && filter) {
-      // Exact match wins; otherwise pick the first SKU that matches
       const exact = DATA.skus.find(s => s.sku.toLowerCase() === filter);
       if (exact) sku = exact.sku;
       else {
         const matches = DATA.skus.filter(s => s.sku.toLowerCase().includes(filter));
         if (matches.length === 1) sku = matches[0].sku;
         else if (matches.length > 1) {
-          // Show a picker
           document.getElementById('context').style.display = 'none';
           document.getElementById('content').innerHTML = `
             <div class="empty" style="text-align:left;padding:24px">
-              <div style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:var(--ink-muted);margin-bottom:16px">${matches.length} SKUs match "${filter}" — pick one:</div>
-              <div style="display:flex;flex-wrap:wrap;gap:8px;font-style:normal">
+              <div style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted);margin-bottom:16px;font-weight:600">${matches.length} SKUs match "${filter}" — pick one:</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
                 ${matches.slice(0, 60).map(s => `<button class="preset-btn pick-sku" data-sku="${s.sku}">${s.sku}</button>`).join('')}
                 ${matches.length > 60 ? `<div style="font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);padding:8px">…${matches.length - 60} more — narrow your search</div>` : ''}
               </div>
@@ -730,16 +740,14 @@
       return;
     }
 
-    // Show context header
     const lifetimeIss = skuData.issues.reduce((s, x) => s + x, 0);
     const lifetimeSal = skuData.sales.reduce((s, x) => s + x, 0);
     const lifetimeRep = skuData.replacements.reduce((s, x) => s + x, 0);
     document.getElementById('context').style.display = 'flex';
     document.getElementById('context-title').textContent = sku;
     document.getElementById('context-meta').textContent =
-      `Lifetime: ${lifetimeIss.toLocaleString()} issues · ${lifetimeSal.toLocaleString()} sales · ${lifetimeRep.toLocaleString()} replacements`;
+      `Lifetime — ${lifetimeIss.toLocaleString()} issues · ${lifetimeSal.toLocaleString()} sales · ${lifetimeRep.toLocaleString()} replacements`;
 
-    // Build the per-month rows
     const monthRows = [];
     let rangeIss = 0, rangeSal = 0, rangeRep = 0;
     for (let i = rangeStartIdx; i <= rangeEndIdx; i++) {
@@ -794,9 +802,6 @@
     });
   }
 
-  // ============================================================
-  // TSV EXPORT — drops onto the clipboard, ready to paste in Excel/Sheets
-  // ============================================================
   function copyTsv(btn) {
     const metric = btn.dataset.metric;
     const months = DATA.months;
@@ -809,7 +814,6 @@
       if (filter && !r.sku.toLowerCase().includes(filter)) return false;
       return r.total > 0;
     });
-
     const sb = sortBy[metric];
     rows.sort((a, b) => {
       const x = sb.key === 'sku' ? a.sku : a.total;
@@ -817,7 +821,6 @@
       if (typeof x === 'string') return sb.dir === 'asc' ? x.localeCompare(y) : y.localeCompare(x);
       return sb.dir === 'asc' ? x - y : y - x;
     });
-
     const header = `SKU\t${metric[0].toUpperCase() + metric.slice(1)} (${months[rangeStartIdx]} to ${months[rangeEndIdx]})`;
     const body = rows.map(r => `${r.sku}\t${r.total}`).join('\n');
     writeClipboard(header + '\n' + body, btn);
@@ -848,7 +851,6 @@
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(done, fail);
     } else {
-      // Fallback for older browsers / non-secure contexts
       const ta = document.createElement('textarea');
       ta.value = text;
       ta.style.position = 'fixed';
