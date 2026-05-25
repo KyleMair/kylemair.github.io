@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Fault Ledger · Browse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1814;
+    --ink-soft: #44403a;
+    --ink-muted: #8a8479;
+    --paper: #f4ede0;
+    --paper-warm: #ebe2d0;
+    --rule: #d4cab4;
+    --accent: #b03a2e;
+    --accent-soft: #e8c5bf;
+    --issues-color: #b03a2e;
+    --sales-color: #2e6b4e;
+    --reps-color: #8a5a1f;
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-feature-settings: 'ss01', 'ss02';
+    min-height: 100vh;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(176, 58, 46, 0.04) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(74, 124, 89, 0.04) 0%, transparent 50%),
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.09 0 0 0 0 0.08 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 48px 40px 80px;
+  }
+
+  /* MASTHEAD */
+  .masthead {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 24px;
+    margin-bottom: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: end;
+    gap: 32px;
+  }
+  .masthead-left, .masthead-right {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-soft);
+  }
+  .masthead-right { text-align: right; }
+  .nav-link {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 1px;
+    transition: opacity 0.15s;
+  }
+  .nav-link:hover { opacity: 0.7; }
+  .masthead-center { text-align: center; }
+  .masthead-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(34px, 4.5vw, 60px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    font-variation-settings: 'opsz' 144, 'SOFT' 50;
+  }
+  .masthead-title em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--accent);
+  }
+  .masthead-sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--ink-muted);
+    margin-top: 12px;
+  }
+  .rule-double {
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    height: 4px;
+    margin-bottom: 32px;
+  }
+
+  /* CONTROLS BAR */
+  .controls {
+    background: var(--paper-warm);
+    border: 1px solid var(--ink);
+    padding: 20px 24px;
+    margin-bottom: 32px;
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 24px;
+    align-items: end;
+  }
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .control-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink-muted);
+  }
+  .control-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .control input[type="text"],
+  .control input[type="month"] {
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    padding: 10px 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink);
+    outline: none;
+  }
+  .control input[type="text"] { width: 100%; }
+  .control input[type="text"]::placeholder { color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .control input:focus {
+    background: var(--paper-warm);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+  .preset-btn {
+    background: transparent;
+    border: 1px solid var(--ink);
+    padding: 8px 14px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .preset-btn:hover { background: var(--ink); color: var(--paper); }
+  .preset-btn.active { background: var(--ink); color: var(--paper); }
+  .control-sep { color: var(--ink-muted); font-family: var(--font-mono); font-size: 11px; }
+
+  /* MODE TOGGLE */
+  .mode-toggle {
+    display: flex;
+    margin-bottom: 24px;
+    border: 1px solid var(--ink);
+    background: var(--paper-warm);
+    align-self: stretch;
+  }
+  .mode-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--rule);
+    padding: 14px 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .mode-btn:last-child { border-right: none; }
+  .mode-btn:hover { background: rgba(176, 58, 46, 0.05); color: var(--ink); }
+  .mode-btn.active { background: var(--ink); color: var(--paper); }
+
+  /* CONTEXT HEADER (shows selected SKU when in timeline mode) */
+  .context {
+    margin-bottom: 24px;
+    padding: 16px 24px;
+    background: var(--ink);
+    color: var(--paper);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .context-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 600;
+    font-style: italic;
+  }
+  .context-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: rgba(244, 237, 224, 0.7);
+  }
+  .clear-link {
+    color: var(--paper);
+    background: transparent;
+    border: 1px solid var(--paper);
+    padding: 6px 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .clear-link:hover { background: var(--paper); color: var(--ink); }
+
+  /* SECTION */
+  .section {
+    margin-bottom: 48px;
+  }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--ink);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .section-head h2 {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 28px;
+    letter-spacing: -0.01em;
+  }
+  .section-head h2 .indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 10px;
+    vertical-align: 1px;
+  }
+  .section-head h2.issues .indicator { background: var(--issues-color); }
+  .section-head h2.sales .indicator { background: var(--sales-color); }
+  .section-head h2.reps .indicator { background: var(--reps-color); }
+  .section-head .actions { display: flex; gap: 12px; align-items: center; }
+  .copy-btn {
+    background: transparent;
+    border: 1px solid var(--ink);
+    padding: 6px 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    color: var(--ink);
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { background: var(--ink); color: var(--paper); }
+  .copy-btn.copied { background: var(--sales-color); color: var(--paper); border-color: var(--sales-color); }
+  .section-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-muted);
+  }
+
+  /* TABLES */
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--ink);
+    background: var(--paper-warm);
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  thead {
+    background: var(--ink);
+    color: var(--paper);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  th {
+    text-align: right;
+    padding: 12px 14px;
+    font-weight: 500;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    border-right: 1px solid rgba(244, 237, 224, 0.15);
+    transition: background 0.15s;
+  }
+  th:first-child { text-align: left; }
+  th:last-child { border-right: none; }
+  th:hover { background: rgba(255,255,255,0.08); }
+  th .sort-ind { opacity: 0.4; margin-left: 4px; font-size: 9px; }
+  th.sort-asc .sort-ind, th.sort-desc .sort-ind { opacity: 1; }
+  tbody tr {
+    border-bottom: 1px solid var(--rule);
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  tbody tr:hover { background: rgba(176, 58, 46, 0.06); }
+  tbody tr.no-hover { cursor: default; }
+  tbody tr.no-hover:hover { background: transparent; }
+  td {
+    padding: 11px 14px;
+    text-align: right;
+    border-right: 1px solid var(--rule);
+    color: var(--ink-soft);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  td:first-child {
+    text-align: left;
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 14px;
+    letter-spacing: -0.005em;
+  }
+  td:last-child { border-right: none; }
+  td.zero { color: var(--ink-muted); opacity: 0.5; }
+  td.total {
+    background: var(--paper);
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 13px;
+  }
+
+  /* Empty state */
+  .empty {
+    padding: 60px 24px;
+    text-align: center;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 18px;
+    color: var(--ink-muted);
+  }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 2px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--ink-muted);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  footer .ornament {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 18px;
+    color: var(--accent);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  @media (max-width: 1000px) {
+    .masthead { grid-template-columns: 1fr; text-align: center; }
+    .masthead-left, .masthead-right { text-align: center; }
+    .controls { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="masthead">
+    <div class="masthead-left">
+      <a href="index.html" class="nav-link">← Dashboard</a><br>
+      Internal Distribution
+    </div>
+    <div class="masthead-center">
+      <div class="masthead-title">Data <em>Browser</em></div>
+      <div class="masthead-sub">Issues · Sales · Replacements</div>
+    </div>
+    <div class="masthead-right">
+      Published<br>
+      <span id="pub-date">—</span>
+    </div>
+  </header>
+  <div class="rule-double"></div>
+
+  <section class="controls" id="controls" style="display:none">
+    <div class="control control-group">
+      <div class="control-label">Search SKU</div>
+      <div class="control-row">
+        <input type="text" id="search" placeholder="Filter or pick a SKU…" />
+      </div>
+    </div>
+    <div class="control control-group">
+      <div class="control-label">Reporting period</div>
+      <div class="control-row">
+        <input type="month" id="range-start" />
+        <span class="control-sep">→</span>
+        <input type="month" id="range-end" />
+      </div>
+    </div>
+    <div class="control control-group">
+      <div class="control-label">Quick presets</div>
+      <div class="control-row">
+        <button class="preset-btn" data-preset="3">3 mo</button>
+        <button class="preset-btn active" data-preset="12">12 mo</button>
+        <button class="preset-btn" data-preset="24">24 mo</button>
+        <button class="preset-btn" data-preset="all">All</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="mode-toggle">
+    <button class="mode-btn active" data-mode="leaderboard">Leaderboard — totals per SKU in range</button>
+    <button class="mode-btn" data-mode="timeline">Timeline — monthly values for one SKU</button>
+  </div>
+
+  <div class="context" id="context" style="display:none">
+    <div>
+      <div class="context-title" id="context-title">—</div>
+      <div class="context-meta" id="context-meta">—</div>
+    </div>
+    <button class="clear-link" id="clear-sku">Clear selection</button>
+  </div>
+
+  <section id="content">
+    <div class="empty">Loading data…</div>
+  </section>
+
+  <footer>
+    <div>Source: Google Sheets &middot; Updated monthly via Zapier</div>
+    <div class="ornament">— fin —</div>
+    <div id="last-update">—</div>
+  </footer>
+</div>
+
+<script>
+  const DATA_URL = 'data/dashboard.json';
+  const fetchURL = DATA_URL + '?t=' + Date.now();
+
+  let DATA = null;
+  let rangeStartIdx = 0;
+  let rangeEndIdx = 0;
+  let mode = 'leaderboard'; // 'leaderboard' | 'timeline'
+  let selectedSku = null;
+  // Sort state, one per metric
+  let sortBy = {
+    issues:       { key: 'total', dir: 'desc' },
+    sales:        { key: 'total', dir: 'desc' },
+    replacements: { key: 'total', dir: 'desc' },
+  };
+
+  const fmtInt = v => (v == null ? '—' : Math.round(v).toLocaleString('en-US'));
+  const fmtMonth = ym => {
+    const [y, m] = ym.split('-').map(Number);
+    return new Date(Date.UTC(y, m - 1)).toLocaleString('en-US', { month: 'short', year: 'numeric' });
+  };
+  const fmtMonthShort = ym => {
+    const [y, m] = ym.split('-').map(Number);
+    return new Date(Date.UTC(y, m - 1)).toLocaleString('en-US', { month: 'short', year: '2-digit' });
+  };
+
+  async function load() {
+    try {
+      const r = await fetch(fetchURL, { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      DATA = await r.json();
+      init();
+    } catch (e) {
+      document.getElementById('content').innerHTML =
+        `<div class="empty" style="color:var(--accent)">Could not load data. ${e.message}</div>`;
+    }
+  }
+
+  function init() {
+    const pub = new Date(DATA.generated_at);
+    document.getElementById('pub-date').textContent =
+      pub.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    document.getElementById('last-update').textContent = 'Last update: ' + pub.toISOString().slice(0, 10);
+
+    const months = DATA.months;
+    // Default to last 12 months
+    rangeEndIdx = months.length - 1;
+    rangeStartIdx = Math.max(0, rangeEndIdx - 11);
+
+    const startInp = document.getElementById('range-start');
+    const endInp   = document.getElementById('range-end');
+    startInp.min = months[0]; startInp.max = months[months.length - 1];
+    endInp.min   = months[0]; endInp.max   = months[months.length - 1];
+    startInp.value = months[rangeStartIdx];
+    endInp.value   = months[rangeEndIdx];
+
+    startInp.addEventListener('change', () => {
+      const i = months.indexOf(startInp.value);
+      if (i >= 0) { rangeStartIdx = Math.min(i, rangeEndIdx); startInp.value = months[rangeStartIdx]; setActivePreset(null); render(); }
+    });
+    endInp.addEventListener('change', () => {
+      const i = months.indexOf(endInp.value);
+      if (i >= 0) { rangeEndIdx = Math.max(i, rangeStartIdx); endInp.value = months[rangeEndIdx]; setActivePreset(null); render(); }
+    });
+
+    document.querySelectorAll('.preset-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        const p = b.dataset.preset;
+        rangeEndIdx = months.length - 1;
+        rangeStartIdx = p === 'all' ? 0 : Math.max(0, rangeEndIdx - (parseInt(p, 10) - 1));
+        startInp.value = months[rangeStartIdx];
+        endInp.value   = months[rangeEndIdx];
+        setActivePreset(p);
+        render();
+      });
+    });
+
+    document.querySelectorAll('.mode-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        mode = b.dataset.mode;
+        document.querySelectorAll('.mode-btn').forEach(x => x.classList.toggle('active', x === b));
+        // Clear SKU selection when switching to leaderboard
+        if (mode === 'leaderboard') selectedSku = null;
+        render();
+      });
+    });
+
+    document.getElementById('search').addEventListener('input', () => {
+      // In timeline mode, search picks the SKU; in leaderboard mode, it filters
+      render();
+    });
+
+    document.getElementById('clear-sku').addEventListener('click', () => {
+      selectedSku = null;
+      document.getElementById('search').value = '';
+      render();
+    });
+
+    document.getElementById('controls').style.display = 'grid';
+    render();
+  }
+
+  function setActivePreset(p) {
+    document.querySelectorAll('.preset-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.preset === p);
+    });
+  }
+
+  function render() {
+    if (mode === 'leaderboard') renderLeaderboard();
+    else renderTimeline();
+  }
+
+  // ============================================================
+  // LEADERBOARD MODE — totals per SKU in selected range
+  // ============================================================
+  function renderLeaderboard() {
+    document.getElementById('context').style.display = 'none';
+    const filter = document.getElementById('search').value.trim().toLowerCase();
+    const months = DATA.months;
+
+    // Compute totals for each SKU across the range, for each metric
+    const rows = DATA.skus.map(s => {
+      let totIss = 0, totSal = 0, totRep = 0;
+      for (let i = rangeStartIdx; i <= rangeEndIdx; i++) {
+        totIss += s.issues[i] || 0;
+        totSal += s.sales[i] || 0;
+        totRep += s.replacements[i] || 0;
+      }
+      return { sku: s.sku, issues: totIss, sales: totSal, replacements: totRep };
+    }).filter(r => {
+      if (filter && !r.sku.toLowerCase().includes(filter)) return false;
+      return r.issues > 0 || r.sales > 0 || r.replacements > 0;
+    });
+
+    const periodLabel = `${fmtMonth(months[rangeStartIdx])} → ${fmtMonth(months[rangeEndIdx])} (${rangeEndIdx - rangeStartIdx + 1} mo)`;
+
+    const sectionHtml = (metric, title, indicator) => {
+      const sb = sortBy[metric];
+      const sorted = [...rows].sort((a, b) => {
+        const x = sb.key === 'sku' ? a.sku : a[metric];
+        const y = sb.key === 'sku' ? b.sku : b[metric];
+        if (typeof x === 'string') return sb.dir === 'asc' ? x.localeCompare(y) : y.localeCompare(x);
+        return sb.dir === 'asc' ? x - y : y - x;
+      });
+      const totalSum = sorted.reduce((s, r) => s + r[metric], 0);
+      const nonZero = sorted.filter(r => r[metric] > 0).length;
+      const skuArrow = sb.key === 'sku' ? (sb.dir === 'asc' ? '↑' : '↓') : '↕';
+      const totArrow = sb.key === 'total' ? (sb.dir === 'asc' ? '↑' : '↓') : '↕';
+
+      return `
+        <section class="section">
+          <div class="section-head">
+            <h2 class="${indicator}"><span class="indicator"></span>${title}</h2>
+            <div class="actions">
+              <span class="section-meta">${nonZero.toLocaleString()} SKUs · ${totalSum.toLocaleString()} total · ${periodLabel}</span>
+              <button class="copy-btn" data-metric="${metric}" data-action="copy">Copy TSV</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th data-metric="${metric}" data-sort="sku" class="${sb.key==='sku'?(sb.dir==='asc'?'sort-asc':'sort-desc'):''}">SKU<span class="sort-ind">${skuArrow}</span></th>
+                  <th data-metric="${metric}" data-sort="total" class="${sb.key==='total'?(sb.dir==='asc'?'sort-asc':'sort-desc'):''}">Total in Range<span class="sort-ind">${totArrow}</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${sorted.map(r => `
+                  <tr data-sku="${r.sku}">
+                    <td>${r.sku}</td>
+                    <td class="${r[metric]===0?'zero':''}">${fmtInt(r[metric])}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      `;
+    };
+
+    document.getElementById('content').innerHTML =
+      sectionHtml('issues',       'Issues Reported',       'issues') +
+      sectionHtml('sales',        'Sales',                 'sales') +
+      sectionHtml('replacements', 'Replacements Issued',   'reps');
+
+    // Wire up: sort headers, copy buttons, row clicks (jumps to timeline mode for that SKU)
+    document.querySelectorAll('th[data-metric][data-sort]').forEach(th => {
+      th.addEventListener('click', () => {
+        const m = th.dataset.metric, k = th.dataset.sort;
+        if (sortBy[m].key === k) sortBy[m].dir = sortBy[m].dir === 'asc' ? 'desc' : 'asc';
+        else { sortBy[m].key = k; sortBy[m].dir = (k === 'sku') ? 'asc' : 'desc'; }
+        renderLeaderboard();
+      });
+    });
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => copyTsv(btn));
+    });
+    document.querySelectorAll('tbody tr[data-sku]').forEach(tr => {
+      tr.addEventListener('click', () => {
+        selectedSku = tr.dataset.sku;
+        mode = 'timeline';
+        document.querySelectorAll('.mode-btn').forEach(x => x.classList.toggle('active', x.dataset.mode === 'timeline'));
+        // Also fill search so it's clear what was selected
+        document.getElementById('search').value = selectedSku;
+        render();
+      });
+    });
+  }
+
+  // ============================================================
+  // TIMELINE MODE — monthly values for one SKU
+  // ============================================================
+  function renderTimeline() {
+    const months = DATA.months;
+    const filter = document.getElementById('search').value.trim().toLowerCase();
+
+    // If no SKU selected, try to resolve from search
+    let sku = selectedSku;
+    if (!sku && filter) {
+      // Exact match wins; otherwise pick the first SKU that matches
+      const exact = DATA.skus.find(s => s.sku.toLowerCase() === filter);
+      if (exact) sku = exact.sku;
+      else {
+        const matches = DATA.skus.filter(s => s.sku.toLowerCase().includes(filter));
+        if (matches.length === 1) sku = matches[0].sku;
+        else if (matches.length > 1) {
+          // Show a picker
+          document.getElementById('context').style.display = 'none';
+          document.getElementById('content').innerHTML = `
+            <div class="empty" style="text-align:left;padding:24px">
+              <div style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:var(--ink-muted);margin-bottom:16px">${matches.length} SKUs match "${filter}" — pick one:</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;font-style:normal">
+                ${matches.slice(0, 60).map(s => `<button class="preset-btn pick-sku" data-sku="${s.sku}">${s.sku}</button>`).join('')}
+                ${matches.length > 60 ? `<div style="font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);padding:8px">…${matches.length - 60} more — narrow your search</div>` : ''}
+              </div>
+            </div>`;
+          document.querySelectorAll('.pick-sku').forEach(b => {
+            b.addEventListener('click', () => {
+              selectedSku = b.dataset.sku;
+              document.getElementById('search').value = selectedSku;
+              render();
+            });
+          });
+          return;
+        }
+      }
+    }
+
+    if (!sku) {
+      document.getElementById('context').style.display = 'none';
+      document.getElementById('content').innerHTML = `
+        <div class="empty">Search for a SKU above to see its monthly breakdown.</div>`;
+      return;
+    }
+
+    const skuData = DATA.skus.find(s => s.sku === sku);
+    if (!skuData) {
+      document.getElementById('content').innerHTML = `
+        <div class="empty" style="color:var(--accent)">No data found for "${sku}".</div>`;
+      return;
+    }
+
+    // Show context header
+    const lifetimeIss = skuData.issues.reduce((s, x) => s + x, 0);
+    const lifetimeSal = skuData.sales.reduce((s, x) => s + x, 0);
+    const lifetimeRep = skuData.replacements.reduce((s, x) => s + x, 0);
+    document.getElementById('context').style.display = 'flex';
+    document.getElementById('context-title').textContent = sku;
+    document.getElementById('context-meta').textContent =
+      `Lifetime: ${lifetimeIss.toLocaleString()} issues · ${lifetimeSal.toLocaleString()} sales · ${lifetimeRep.toLocaleString()} replacements`;
+
+    // Build the per-month rows
+    const monthRows = [];
+    let rangeIss = 0, rangeSal = 0, rangeRep = 0;
+    for (let i = rangeStartIdx; i <= rangeEndIdx; i++) {
+      const iss = skuData.issues[i] || 0;
+      const sal = skuData.sales[i] || 0;
+      const rep = skuData.replacements[i] || 0;
+      monthRows.push({ month: months[i], issues: iss, sales: sal, replacements: rep });
+      rangeIss += iss; rangeSal += sal; rangeRep += rep;
+    }
+
+    const sectionHtml = (metric, title, indicator, total) => `
+      <section class="section">
+        <div class="section-head">
+          <h2 class="${indicator}"><span class="indicator"></span>${title}</h2>
+          <div class="actions">
+            <span class="section-meta">${total.toLocaleString()} in range · ${rangeEndIdx - rangeStartIdx + 1} months</span>
+            <button class="copy-btn" data-metric="${metric}" data-mode="timeline" data-sku="${sku}">Copy TSV</button>
+          </div>
+        </div>
+        <div class="table-wrap" style="max-height:none">
+          <table>
+            <thead>
+              <tr>
+                <th style="text-align:left">Month</th>
+                <th>${title}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${monthRows.map(r => `
+                <tr class="no-hover">
+                  <td>${fmtMonth(r.month)}</td>
+                  <td class="${r[metric]===0?'zero':''}">${fmtInt(r[metric])}</td>
+                </tr>
+              `).join('')}
+              <tr class="no-hover">
+                <td class="total">Total</td>
+                <td class="total">${fmtInt(total)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    `;
+
+    document.getElementById('content').innerHTML =
+      sectionHtml('issues',       'Issues Reported',     'issues', rangeIss) +
+      sectionHtml('sales',        'Sales',               'sales',  rangeSal) +
+      sectionHtml('replacements', 'Replacements Issued', 'reps',   rangeRep);
+
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => copyTsvTimeline(btn, skuData, monthRows));
+    });
+  }
+
+  // ============================================================
+  // TSV EXPORT — drops onto the clipboard, ready to paste in Excel/Sheets
+  // ============================================================
+  function copyTsv(btn) {
+    const metric = btn.dataset.metric;
+    const months = DATA.months;
+    const filter = document.getElementById('search').value.trim().toLowerCase();
+    const rows = DATA.skus.map(s => {
+      let total = 0;
+      for (let i = rangeStartIdx; i <= rangeEndIdx; i++) total += s[metric][i] || 0;
+      return { sku: s.sku, total };
+    }).filter(r => {
+      if (filter && !r.sku.toLowerCase().includes(filter)) return false;
+      return r.total > 0;
+    });
+
+    const sb = sortBy[metric];
+    rows.sort((a, b) => {
+      const x = sb.key === 'sku' ? a.sku : a.total;
+      const y = sb.key === 'sku' ? b.sku : b.total;
+      if (typeof x === 'string') return sb.dir === 'asc' ? x.localeCompare(y) : y.localeCompare(x);
+      return sb.dir === 'asc' ? x - y : y - x;
+    });
+
+    const header = `SKU\t${metric[0].toUpperCase() + metric.slice(1)} (${months[rangeStartIdx]} to ${months[rangeEndIdx]})`;
+    const body = rows.map(r => `${r.sku}\t${r.total}`).join('\n');
+    writeClipboard(header + '\n' + body, btn);
+  }
+
+  function copyTsvTimeline(btn, skuData, monthRows) {
+    const metric = btn.dataset.metric;
+    const header = `Month\t${metric[0].toUpperCase() + metric.slice(1)} (${skuData.sku})`;
+    const body = monthRows.map(r => `${r.month}\t${r[metric]}`).join('\n');
+    const total = monthRows.reduce((s, r) => s + r[metric], 0);
+    writeClipboard(header + '\n' + body + `\nTotal\t${total}`, btn);
+  }
+
+  function writeClipboard(text, btn) {
+    const done = () => {
+      const originalText = btn.textContent;
+      btn.textContent = 'Copied ✓';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.classList.remove('copied');
+      }, 1500);
+    };
+    const fail = () => {
+      btn.textContent = 'Copy failed';
+      setTimeout(() => { btn.textContent = 'Copy TSV'; }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fail);
+    } else {
+      // Fallback for older browsers / non-secure contexts
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) { fail(); }
+      document.body.removeChild(ta);
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>
