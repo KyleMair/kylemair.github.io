@@ -491,9 +491,14 @@
   const DATA_URL = 'data/dashboard.json';
   const fetchURL = DATA_URL + '?t=' + Date.now();
 
-  // Highlight thresholds for issue rate (% of sales)
+  // Highlight thresholds for issue rate (lifetime issues / lifetime sales)
   const RATE_BAD  = 0.10;   // ≥10%
   const RATE_WARN = 0.03;   // 3-10%
+
+  // Per-replacement logistics overhead (Support / Pick / Ship average)
+  // Source: 'Monthly Breakdown Faults & Sale' column P. Constant in the source sheet at 31.5.
+  // Replacement cost per unit = (LOGISTICS_OVERHEAD + COG). See columns N and O in source.
+  const LOGISTICS_OVERHEAD = 31.50;
 
   let DATA = null;
   let rangeStartIdx = 0;
@@ -546,8 +551,6 @@
     //   "Current Month"  = endIdx       (latest month)
     //   "Last Month"     = endIdx - 1   (the month before)
     //   "3 Months Ago"   = endIdx - 2   (one more back — i.e. the start of the rolling 3-mo window)
-    // The label "3 Months Ago" in the source sheet refers to the oldest of the three months
-    // being compared, not literally "current minus 3".
     const at = (arr, i) => (i >= 0 && i < arr.length) ? (arr[i] || 0) : null;
     const issues_current = at(issues, endIdx);
     const issues_last    = at(issues, endIdx - 1);
@@ -558,21 +561,35 @@
     const lifetimeSales  = sum(sales);
     const lifetimeReps   = sum(reps);
 
-    // Per-month issue rate uses LIFETIME sales as denominator (matches the
-    // user's screenshot, where "Issues % Current Month" = issues_current_month / sales_lifetime)
-    const pct = v => (lifetimeSales > 0 ? v / lifetimeSales : null);
-
-    const issues_pct_current = pct(issues_current);
-    const issues_pct_last    = pct(issues_last);
-    const issues_pct_3ago    = pct(issues_3ago);
+    // Issue rate per month uses the source sheet's lifetime-adjusted formula:
+    //
+    //   Issues % Current  = lifetimeIssues / lifetimeSales              (current state)
+    //   Issues % Last Mo  = (lifetimeIssues - issues_last) / lifetimeSales
+    //   Issues % 3mo Ago  = (lifetimeIssues - issues_3ago) / lifetimeSales
+    //
+    // This is a "lifetime order-to-ticket ratio at a moment in time" — the
+    // denominator is always lifetime sales, the numerator strips out the issues
+    // attributable to the given month. The 3-month and last-month columns show
+    // what the lifetime rate would have been before that month's issues were
+    // reported. The MoM delta therefore tells you how much one month's faults
+    // shifted the lifetime rate.
+    //
+    // Source: 'Monthly Breakdown Faults & Sale' columns E, F, G in the workbook.
+    const issues_pct_current = (lifetimeSales > 0) ? lifetimeIssues / lifetimeSales : null;
+    const issues_pct_last    = (lifetimeSales > 0 && issues_last != null)
+                               ? (lifetimeIssues - issues_last) / lifetimeSales : null;
+    const issues_pct_3ago    = (lifetimeSales > 0 && issues_3ago != null)
+                               ? (lifetimeIssues - issues_3ago) / lifetimeSales : null;
     const change_mom = (issues_pct_current != null && issues_pct_last != null)
                        ? issues_pct_current - issues_pct_last : null;
     const issues_vs_sales_lifetime = (lifetimeSales > 0) ? lifetimeIssues / lifetimeSales : null;
 
     const cog = sku.cog;
     const reps_current = at(reps, endIdx);
-    const cost_current = (cog != null && reps_current != null) ? reps_current * cog : null;
-    const cost_lifetime = (cog != null) ? lifetimeReps * cog : null;
+    // Replacement cost includes logistics overhead per unit. Matches source formulas N and O.
+    const unitCost = (cog != null) ? (cog + LOGISTICS_OVERHEAD) : null;
+    const cost_current  = (unitCost != null && reps_current != null) ? reps_current * unitCost : null;
+    const cost_lifetime = (unitCost != null) ? lifetimeReps * unitCost : null;
 
     return {
       sku: sku.sku,
