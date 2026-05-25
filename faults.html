@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Product Fault Dashboard</title>
+<title>The Fault Ledger</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -40,7 +40,7 @@
     background-image:
       radial-gradient(circle at 20% 10%, rgba(176, 58, 46, 0.04) 0%, transparent 50%),
       radial-gradient(circle at 80% 80%, rgba(74, 124, 89, 0.04) 0%, transparent 50%),
-      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.09 0 0 0 0 0.08 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.09 0 0 0 0 0.08 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
     pointer-events: none;
     z-index: 0;
   }
@@ -70,9 +70,7 @@
     color: var(--ink-soft);
   }
   .masthead-right { text-align: right; }
-  .masthead-center {
-    text-align: center;
-  }
+  .masthead-center { text-align: center; }
   .masthead-title {
     font-family: var(--font-display);
     font-weight: 800;
@@ -101,6 +99,68 @@
     margin-bottom: 32px;
   }
 
+  /* CONTROLS BAR */
+  .controls {
+    background: var(--paper-warm);
+    border: 1px solid var(--ink);
+    padding: 20px 24px;
+    margin-bottom: 32px;
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    gap: 24px;
+    align-items: end;
+  }
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .control-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink-muted);
+  }
+  .control-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .control select, .control input[type="month"] {
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    padding: 8px 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink);
+    outline: none;
+    cursor: pointer;
+  }
+  .control select:focus, .control input:focus {
+    background: var(--paper-warm);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+  .preset-btn {
+    background: transparent;
+    border: 1px solid var(--ink);
+    padding: 8px 14px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .preset-btn:hover { background: var(--ink); color: var(--paper); }
+  .preset-btn.active { background: var(--ink); color: var(--paper); }
+  .control-sep {
+    color: var(--ink-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
   /* SUMMARY CARDS */
   .summary {
     display: grid;
@@ -113,7 +173,6 @@
   .stat {
     padding: 24px 28px;
     border-right: 1px solid var(--rule);
-    position: relative;
   }
   .stat:last-child { border-right: none; }
   .stat-label {
@@ -148,6 +207,8 @@
     margin: 32px 0 16px;
     padding-bottom: 8px;
     border-bottom: 1px solid var(--ink);
+    flex-wrap: wrap;
+    gap: 12px;
   }
   .section-head h2 {
     font-family: var(--font-display);
@@ -198,6 +259,8 @@
     overflow-x: auto;
     border: 1px solid var(--ink);
     background: var(--paper-warm);
+    max-height: 70vh;
+    overflow-y: auto;
   }
   table {
     width: 100%;
@@ -206,7 +269,13 @@
     font-size: 12px;
     min-width: 1500px;
   }
-  thead { background: var(--ink); color: var(--paper); }
+  thead {
+    background: var(--ink);
+    color: var(--paper);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
   th {
     text-align: right;
     padding: 14px 12px;
@@ -233,7 +302,7 @@
   tbody tr:hover { background: rgba(176, 58, 46, 0.04); }
   tbody tr:last-child { border-bottom: none; }
   td {
-    padding: 14px 12px;
+    padding: 12px 12px;
     text-align: right;
     border-right: 1px solid var(--rule);
     color: var(--ink-soft);
@@ -251,19 +320,12 @@
   td.num { font-variant-numeric: tabular-nums; }
   td.na { color: var(--ink-muted); font-style: italic; }
 
-  /* CELL HIGHLIGHTS */
   td.flag-bad { background: var(--bad-soft); color: var(--bad); font-weight: 700; }
   td.flag-warn { background: var(--warn-soft); color: #6b5410; font-weight: 600; }
   td.flag-good { background: var(--good-soft); color: var(--good); font-weight: 600; }
 
-  .delta {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .delta::before {
-    font-size: 10px;
-  }
+  .delta { display: inline-flex; align-items: center; gap: 4px; }
+  .delta::before { font-size: 10px; }
   .delta.up { color: var(--bad); }
   .delta.up::before { content: '▲'; }
   .delta.down { color: var(--good); }
@@ -271,7 +333,6 @@
   .delta.flat { color: var(--ink-muted); }
   .delta.flat::before { content: '—'; }
 
-  /* FOOTER */
   footer {
     margin-top: 64px;
     padding-top: 24px;
@@ -284,6 +345,8 @@
     text-transform: uppercase;
     letter-spacing: 0.15em;
     color: var(--ink-muted);
+    flex-wrap: wrap;
+    gap: 12px;
   }
   footer .ornament {
     font-family: var(--font-display);
@@ -294,7 +357,6 @@
     letter-spacing: 0;
   }
 
-  /* LOADING */
   .loading, .error {
     padding: 80px 40px;
     text-align: center;
@@ -305,12 +367,13 @@
   }
   .error { color: var(--accent); }
 
-  @media (max-width: 900px) {
+  @media (max-width: 1000px) {
     .summary { grid-template-columns: repeat(2, 1fr); }
     .stat:nth-child(2) { border-right: none; }
     .stat:nth-child(1), .stat:nth-child(2) { border-bottom: 1px solid var(--rule); }
     .masthead { grid-template-columns: 1fr; text-align: center; }
     .masthead-left, .masthead-right { text-align: center; }
+    .controls { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -333,32 +396,57 @@
   </header>
   <div class="rule-double"></div>
 
+  <section class="controls" id="controls" style="display:none">
+    <div class="control control-group">
+      <div class="control-label">Reporting period</div>
+      <div class="control-row">
+        <input type="month" id="range-start" />
+        <span class="control-sep">→</span>
+        <input type="month" id="range-end" />
+      </div>
+    </div>
+    <div class="control control-group">
+      <div class="control-label">Quick presets</div>
+      <div class="control-row">
+        <button class="preset-btn active" data-preset="3">3 mo</button>
+        <button class="preset-btn" data-preset="6">6 mo</button>
+        <button class="preset-btn" data-preset="12">12 mo</button>
+        <button class="preset-btn" data-preset="all">All</button>
+      </div>
+    </div>
+    <div></div>
+    <div class="control control-group" style="text-align:right">
+      <div class="control-label">Window</div>
+      <div id="window-label" style="font-family:var(--font-mono);font-size:12px;color:var(--ink-soft)">—</div>
+    </div>
+  </section>
+
   <section class="summary" id="summary">
     <div class="stat">
-      <div class="stat-label">SKUs Tracked</div>
+      <div class="stat-label">SKUs (Active)</div>
       <div class="stat-value" id="stat-skus">—</div>
-      <div class="stat-meta">Active in reporting period</div>
+      <div class="stat-meta">In selected window</div>
     </div>
     <div class="stat">
-      <div class="stat-label">Issues This Month</div>
+      <div class="stat-label">Issues, Current Month</div>
       <div class="stat-value accent" id="stat-issues">—</div>
       <div class="stat-meta" id="stat-issues-delta">—</div>
     </div>
     <div class="stat">
-      <div class="stat-label">Replacements</div>
+      <div class="stat-label">Replacements, Window</div>
       <div class="stat-value" id="stat-replacements">—</div>
       <div class="stat-meta" id="stat-replacement-cost">—</div>
     </div>
     <div class="stat">
-      <div class="stat-label">Lifetime Cost</div>
+      <div class="stat-label">Lifetime Replacement Cost</div>
       <div class="stat-value" id="stat-lifetime-cost">—</div>
-      <div class="stat-meta">Cumulative replacements</div>
+      <div class="stat-meta">All-time, all SKUs</div>
     </div>
   </section>
 
   <div class="section-head">
     <h2>By the Numbers</h2>
-    <div class="meta">Per SKU &middot; Sorted by current month issue rate</div>
+    <div class="meta" id="period-caption">—</div>
   </div>
 
   <div class="toolbar">
@@ -373,7 +461,7 @@
   </div>
 
   <footer>
-    <div>Source: Zendesk &middot; Phocas &middot; Updated monthly via Zapier</div>
+    <div>Source: Google Sheets &middot; Updated monthly via Zapier</div>
     <div class="ornament">— fin —</div>
     <div id="last-update">—</div>
   </footer>
@@ -381,115 +469,256 @@
 
 <script>
   // ============================================================
-  // CONFIG — point this at your raw GitHub JSON
+  // CONFIG
   // ============================================================
-  // For GitHub Pages, the same-repo relative path works fine:
   const DATA_URL = 'data/dashboard.json';
-  // If hosting elsewhere or testing, use:
-  // const DATA_URL = 'https://raw.githubusercontent.com/<user>/<repo>/main/data/dashboard.json';
-
-  // Cache-bust query so updated JSON isn't stuck behind a CDN cache
   const fetchURL = DATA_URL + '?t=' + Date.now();
 
+  // Highlight thresholds for issue rate (% of sales)
+  const RATE_BAD  = 0.10;   // ≥10%
+  const RATE_WARN = 0.03;   // 3-10%
+
   let DATA = null;
+  let rangeStartIdx = 0;
+  let rangeEndIdx = 0;
   let sortKey = 'issues_pct_current_month';
   let sortDir = 'desc';
 
-  const COLUMNS = [
-    { key: 'sku',                              label: 'SKU',                       type: 'text' },
-    { key: 'issues_3mo_ago',                   label: 'Issues 3mo Ago',            type: 'int' },
-    { key: 'issues_last_month',                label: 'Issues Last Month',         type: 'int' },
-    { key: 'issues_current_month',             label: 'Issues Current',            type: 'int', highlight: 'current' },
-    { key: 'issues_pct_3mo_ago',               label: 'Issues % 3mo Ago',          type: 'pct' },
-    { key: 'issues_pct_last_month',            label: 'Issues % Last',             type: 'pct' },
-    { key: 'issues_pct_current_month',         label: 'Issues % Current',          type: 'pct', highlight: 'rate' },
-    { key: 'change_mom',                       label: 'Δ MoM',                     type: 'delta' },
-    { key: 'issues_lifetime',                  label: 'Issues Lifetime',           type: 'int' },
-    { key: 'sales_lifetime',                   label: 'Sales Lifetime',            type: 'int' },
-    { key: 'issues_vs_sales_lifetime',         label: 'Issues vs Sales',           type: 'pct', highlight: 'rate' },
-    { key: 'cog',                              label: 'COG',                       type: 'money' },
-    { key: 'total_replacements_month',         label: 'Replacements (Month)',      type: 'int' },
-    { key: 'total_cost_replacements_month',    label: 'Cost (Month)',              type: 'money' },
-    { key: 'total_cost_replacements_lifetime', label: 'Cost (Lifetime)',           type: 'money' },
-  ];
-
-  // Format helpers
-  const fmtInt   = v => (v == null ? '—' : v.toLocaleString('en-US'));
+  const fmtInt   = v => (v == null ? '—' : Math.round(v).toLocaleString('en-US'));
   const fmtMoney = v => (v == null ? '#N/A' : '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-  const fmtPct   = v => (v == null ? '—' : (v * 100).toFixed(2) + '%');
+  const fmtPct   = v => (v == null || !isFinite(v) ? '—' : (v * 100).toFixed(2) + '%');
   const fmtDelta = v => {
-    if (v == null) return '<span class="delta flat">—</span>';
+    if (v == null || !isFinite(v)) return '<span class="delta flat">—</span>';
     const cls = v > 0.0005 ? 'up' : v < -0.0005 ? 'down' : 'flat';
     return `<span class="delta ${cls}">${(v * 100).toFixed(2)}%</span>`;
   };
+  const fmtMonth = ym => {
+    const [y, m] = ym.split('-').map(Number);
+    return new Date(Date.UTC(y, m - 1)).toLocaleString('en-US', { month: 'short', year: 'numeric' });
+  };
 
-  // Highlight thresholds — issue rate columns
   function rateClass(v) {
-    if (v == null) return '';
-    if (v >= 0.10) return 'flag-bad';   // ≥10% issue rate
-    if (v >= 0.03) return 'flag-warn';  // 3–10%
+    if (v == null || !isFinite(v)) return '';
+    if (v >= RATE_BAD)  return 'flag-bad';
+    if (v >= RATE_WARN) return 'flag-warn';
     return '';
   }
-  function currentIssueClass(v, prev) {
+  function currentClass(v, prev) {
     if (v == null || prev == null) return '';
+    if (prev === 0) return v > 0 ? 'flag-warn' : '';
     if (v > prev * 1.25) return 'flag-bad';
-    if (v > prev) return 'flag-warn';
+    if (v > prev)        return 'flag-warn';
     if (v < prev * 0.75) return 'flag-good';
     return '';
   }
 
+  // ============================================================
+  // CORE: derive period metrics for a SKU given a [start, end] index range
+  // ============================================================
+  function computeRow(sku, startIdx, endIdx) {
+    const issues = sku.issues, sales = sku.sales, reps = sku.replacements;
+
+    // Window slices
+    const winIssues = issues.slice(startIdx, endIdx + 1);
+    const winSales  = sales.slice(startIdx, endIdx + 1);
+    const winReps   = reps.slice(startIdx, endIdx + 1);
+
+    const sum = a => a.reduce((s, x) => s + (x || 0), 0);
+
+    // Three consecutive reference points matching the source spreadsheet convention:
+    //   "Current Month"  = endIdx       (latest month)
+    //   "Last Month"     = endIdx - 1   (the month before)
+    //   "3 Months Ago"   = endIdx - 2   (one more back — i.e. the start of the rolling 3-mo window)
+    // The label "3 Months Ago" in the source sheet refers to the oldest of the three months
+    // being compared, not literally "current minus 3".
+    const at = (arr, i) => (i >= 0 && i < arr.length) ? (arr[i] || 0) : null;
+    const issues_current = at(issues, endIdx);
+    const issues_last    = at(issues, endIdx - 1);
+    const issues_3ago    = at(issues, endIdx - 2);
+
+    // Lifetime totals (across ALL months, regardless of window)
+    const lifetimeIssues = sum(issues);
+    const lifetimeSales  = sum(sales);
+    const lifetimeReps   = sum(reps);
+
+    // Per-month issue rate uses LIFETIME sales as denominator (matches the
+    // user's screenshot, where "Issues % Current Month" = issues_current_month / sales_lifetime)
+    const pct = v => (lifetimeSales > 0 ? v / lifetimeSales : null);
+
+    const issues_pct_current = pct(issues_current);
+    const issues_pct_last    = pct(issues_last);
+    const issues_pct_3ago    = pct(issues_3ago);
+    const change_mom = (issues_pct_current != null && issues_pct_last != null)
+                       ? issues_pct_current - issues_pct_last : null;
+    const issues_vs_sales_lifetime = (lifetimeSales > 0) ? lifetimeIssues / lifetimeSales : null;
+
+    const cog = sku.cog;
+    const reps_current = at(reps, endIdx);
+    const cost_current = (cog != null && reps_current != null) ? reps_current * cog : null;
+    const cost_lifetime = (cog != null) ? lifetimeReps * cog : null;
+
+    return {
+      sku: sku.sku,
+      issues_3mo_ago: issues_3ago,
+      issues_last_month: issues_last,
+      issues_current_month: issues_current,
+      issues_window_total: sum(winIssues),
+      issues_pct_3mo_ago: issues_pct_3ago,
+      issues_pct_last_month: issues_pct_last,
+      issues_pct_current_month: issues_pct_current,
+      change_mom,
+      issues_lifetime: lifetimeIssues,
+      sales_lifetime: lifetimeSales,
+      issues_vs_sales_lifetime,
+      cog,
+      total_replacements_month: reps_current,
+      total_replacements_window: sum(winReps),
+      total_cost_replacements_month: cost_current,
+      total_cost_replacements_lifetime: cost_lifetime,
+    };
+  }
+
+  const COLUMNS = [
+    { key: 'sku',                              label: 'SKU',                    type: 'text' },
+    { key: 'issues_3mo_ago',                   label: 'Issues 3mo Ago',         type: 'int' },
+    { key: 'issues_last_month',                label: 'Issues Last Mo',         type: 'int' },
+    { key: 'issues_current_month',             label: 'Issues Current',         type: 'int', highlight: 'current' },
+    { key: 'issues_pct_3mo_ago',               label: 'Issues % 3mo',           type: 'pct' },
+    { key: 'issues_pct_last_month',            label: 'Issues % Last',          type: 'pct' },
+    { key: 'issues_pct_current_month',         label: 'Issues % Current',       type: 'pct', highlight: 'rate' },
+    { key: 'change_mom',                       label: 'Δ MoM',                  type: 'delta' },
+    { key: 'issues_lifetime',                  label: 'Issues Lifetime',        type: 'int' },
+    { key: 'sales_lifetime',                   label: 'Sales Lifetime',         type: 'int' },
+    { key: 'issues_vs_sales_lifetime',         label: 'Issues vs Sales',        type: 'pct', highlight: 'rate' },
+    { key: 'cog',                              label: 'COG',                    type: 'money' },
+    { key: 'total_replacements_month',         label: 'Replacements (Month)',   type: 'int' },
+    { key: 'total_cost_replacements_month',    label: 'Cost (Month)',           type: 'money' },
+    { key: 'total_cost_replacements_lifetime', label: 'Cost (Lifetime)',        type: 'money' },
+  ];
+
+  // ============================================================
+  // LOAD & RENDER
+  // ============================================================
   async function load() {
     try {
       const r = await fetch(fetchURL, { cache: 'no-store' });
       if (!r.ok) throw new Error('HTTP ' + r.status);
       DATA = await r.json();
-      hydrate();
+      init();
     } catch (e) {
       document.getElementById('table-target').innerHTML =
         `<div class="error">Could not load data.<br><small style="font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase">${e.message}</small></div>`;
     }
   }
 
-  function hydrate() {
-    // Masthead dates
+  function init() {
     const pub = new Date(DATA.generated_at);
     document.getElementById('pub-date').textContent =
       pub.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     document.getElementById('last-update').textContent = 'Last update: ' + pub.toISOString().slice(0, 10);
 
-    // Summary stats
-    const skus = DATA.skus;
-    const totalIssues = skus.reduce((s, r) => s + (r.issues_current_month || 0), 0);
-    const totalLastMonth = skus.reduce((s, r) => s + (r.issues_last_month || 0), 0);
-    const totalReplacements = skus.reduce((s, r) => s + (r.total_replacements_month || 0), 0);
-    const totalCostMonth = skus.reduce((s, r) => s + (r.total_cost_replacements_month || 0), 0);
-    const totalCostLifetime = skus.reduce((s, r) => s + (r.total_cost_replacements_lifetime || 0), 0);
+    const months = DATA.months;
+    // Defaults: last 3 months
+    rangeEndIdx = months.length - 1;
+    rangeStartIdx = Math.max(0, rangeEndIdx - 2);
 
-    document.getElementById('stat-skus').textContent = skus.length;
+    const startInp = document.getElementById('range-start');
+    const endInp   = document.getElementById('range-end');
+    startInp.min = months[0]; startInp.max = months[months.length - 1];
+    endInp.min   = months[0]; endInp.max   = months[months.length - 1];
+    startInp.value = months[rangeStartIdx];
+    endInp.value   = months[rangeEndIdx];
+
+    startInp.addEventListener('change', () => {
+      const v = startInp.value;
+      const i = months.indexOf(v);
+      if (i >= 0) { rangeStartIdx = Math.min(i, rangeEndIdx); startInp.value = months[rangeStartIdx]; setActivePreset(null); rerender(); }
+    });
+    endInp.addEventListener('change', () => {
+      const v = endInp.value;
+      const i = months.indexOf(v);
+      if (i >= 0) { rangeEndIdx = Math.max(i, rangeStartIdx); endInp.value = months[rangeEndIdx]; setActivePreset(null); rerender(); }
+    });
+
+    document.querySelectorAll('.preset-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        const p = b.dataset.preset;
+        rangeEndIdx = months.length - 1;
+        rangeStartIdx = p === 'all' ? 0 : Math.max(0, rangeEndIdx - (parseInt(p, 10) - 1));
+        startInp.value = months[rangeStartIdx];
+        endInp.value   = months[rangeEndIdx];
+        setActivePreset(p);
+        rerender();
+      });
+    });
+
+    document.getElementById('search').addEventListener('input', renderTable);
+    document.getElementById('controls').style.display = 'grid';
+    rerender();
+  }
+
+  function setActivePreset(p) {
+    document.querySelectorAll('.preset-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.preset === p);
+    });
+  }
+
+  function rerender() {
+    const months = DATA.months;
+    document.getElementById('window-label').textContent =
+      `${fmtMonth(months[rangeStartIdx])} → ${fmtMonth(months[rangeEndIdx])} (${rangeEndIdx - rangeStartIdx + 1} mo)`;
+    document.getElementById('period-caption').textContent =
+      `Per SKU · Window: ${fmtMonth(months[rangeStartIdx])} – ${fmtMonth(months[rangeEndIdx])}`;
+    renderSummary();
+    renderTable();
+  }
+
+  function activeRows() {
+    return DATA.skus
+      .map(s => computeRow(s, rangeStartIdx, rangeEndIdx))
+      .filter(r => r.issues_window_total > 0 || r.total_replacements_window > 0 || (r.sales_lifetime > 0 && r.issues_lifetime > 0));
+  }
+
+  function renderSummary() {
+    const rows = activeRows();
+    const totalIssues = rows.reduce((s, r) => s + (r.issues_current_month || 0), 0);
+    const lastMoIssues = rows.reduce((s, r) => s + (r.issues_last_month || 0), 0);
+    const winReps = rows.reduce((s, r) => s + (r.total_replacements_window || 0), 0);
+    const lifeCost = rows.reduce((s, r) => s + (r.total_cost_replacements_lifetime || 0), 0);
+
+    // Window replacement cost
+    let winCost = 0;
+    DATA.skus.forEach(s => {
+      if (s.cog == null) return;
+      for (let i = rangeStartIdx; i <= rangeEndIdx; i++) {
+        winCost += (s.replacements[i] || 0) * s.cog;
+      }
+    });
+
+    document.getElementById('stat-skus').textContent = rows.length;
     document.getElementById('stat-issues').textContent = totalIssues.toLocaleString();
-
-    const diff = totalIssues - totalLastMonth;
-    const pctDiff = totalLastMonth ? (diff / totalLastMonth * 100) : 0;
+    const diff = totalIssues - lastMoIssues;
+    const pctDiff = lastMoIssues ? (diff / lastMoIssues * 100) : 0;
     const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '—';
     document.getElementById('stat-issues-delta').innerHTML =
-      `${arrow} ${Math.abs(diff)} (${pctDiff >= 0 ? '+' : ''}${pctDiff.toFixed(1)}%) vs last month`;
-
-    document.getElementById('stat-replacements').textContent = totalReplacements.toLocaleString();
-    document.getElementById('stat-replacement-cost').textContent = fmtMoney(totalCostMonth) + ' this month';
-    document.getElementById('stat-lifetime-cost').textContent = fmtMoney(totalCostLifetime);
-
-    renderTable();
+      `${arrow} ${Math.abs(diff).toLocaleString()} (${pctDiff >= 0 ? '+' : ''}${pctDiff.toFixed(1)}%) vs last month`;
+    document.getElementById('stat-replacements').textContent = winReps.toLocaleString();
+    document.getElementById('stat-replacement-cost').textContent = fmtMoney(winCost) + ' in window';
+    document.getElementById('stat-lifetime-cost').textContent = fmtMoney(lifeCost);
   }
 
   function renderTable() {
     const filter = document.getElementById('search').value.trim().toLowerCase();
-    let rows = DATA.skus.filter(r => !filter || r.sku.toLowerCase().includes(filter));
+    let rows = activeRows();
+    if (filter) rows = rows.filter(r => r.sku.toLowerCase().includes(filter));
 
     rows.sort((a, b) => {
       const x = a[sortKey], y = b[sortKey];
-      if (x == null && y == null) return 0;
-      if (x == null) return 1;
-      if (y == null) return -1;
+      const xn = (x == null || !isFinite(x));
+      const yn = (y == null || !isFinite(y));
+      if (xn && yn) return 0;
+      if (xn) return 1;
+      if (yn) return -1;
       if (typeof x === 'string') return sortDir === 'asc' ? x.localeCompare(y) : y.localeCompare(x);
       return sortDir === 'asc' ? x - y : y - x;
     });
@@ -508,31 +737,27 @@
         const v = r[c.key];
         let cell = '', cls = 'num';
 
-        if (c.type === 'text') {
-          cell = v;
-          cls = '';
-        } else if (v == null) {
+        if (c.type === 'text') { cell = v; cls = ''; }
+        else if (v == null || (typeof v === 'number' && !isFinite(v))) {
           cell = c.type === 'money' ? '#N/A' : '—';
           cls += ' na';
-        } else if (c.type === 'int')   cell = fmtInt(v);
-        else if (c.type === 'money')   cell = fmtMoney(v);
-        else if (c.type === 'pct')     cell = fmtPct(v);
-        else if (c.type === 'delta')   cell = fmtDelta(v);
+        }
+        else if (c.type === 'int')   cell = fmtInt(v);
+        else if (c.type === 'money') cell = fmtMoney(v);
+        else if (c.type === 'pct')   cell = fmtPct(v);
+        else if (c.type === 'delta') cell = fmtDelta(v);
 
-        // Highlights
-        if (c.highlight === 'rate') cls += ' ' + rateClass(v);
-        if (c.highlight === 'current') cls += ' ' + currentIssueClass(v, r.issues_last_month);
+        if (c.highlight === 'rate')    cls += ' ' + rateClass(v);
+        if (c.highlight === 'current') cls += ' ' + currentClass(v, r.issues_last_month);
 
         html += `<td class="${cls.trim()}">${cell}</td>`;
       });
       html += '</tr>';
     });
-
     html += '</tbody></table>';
     document.getElementById('table-target').innerHTML = html;
-    document.getElementById('row-count').textContent = `${rows.length} row${rows.length === 1 ? '' : 's'}`;
+    document.getElementById('row-count').textContent = `${rows.length.toLocaleString()} row${rows.length === 1 ? '' : 's'}`;
 
-    // Bind sort
     document.querySelectorAll('th[data-key]').forEach(th => {
       th.addEventListener('click', () => {
         const k = th.dataset.key;
@@ -542,8 +767,6 @@
       });
     });
   }
-
-  document.getElementById('search').addEventListener('input', () => renderTable());
 
   load();
 </script>
