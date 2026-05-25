@@ -1,1 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Fault Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1814;
+    --ink-soft: #44403a;
+    --ink-muted: #8a8479;
+    --paper: #f4ede0;
+    --paper-warm: #ebe2d0;
+    --rule: #d4cab4;
+    --accent: #b03a2e;
+    --accent-soft: #e8c5bf;
+    --good: #4a7c59;
+    --good-soft: #cfe0d3;
+    --warn: #d4a843;
+    --warn-soft: #f0e3b8;
+    --bad: #b03a2e;
+    --bad-soft: #f0d0c8;
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-feature-settings: 'ss01', 'ss02';
+    min-height: 100vh;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(176, 58, 46, 0.04) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(74, 124, 89, 0.04) 0%, transparent 50%),
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.09 0 0 0 0 0.08 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 48px 40px 80px;
+  }
 
+  /* MASTHEAD */
+  .masthead {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 24px;
+    margin-bottom: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: end;
+    gap: 32px;
+  }
+  .masthead-left, .masthead-right {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-soft);
+  }
+  .masthead-right { text-align: right; }
+  .masthead-center {
+    text-align: center;
+  }
+  .masthead-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(40px, 5vw, 72px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    font-variation-settings: 'opsz' 144, 'SOFT' 50;
+  }
+  .masthead-title em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--accent);
+  }
+  .masthead-sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--ink-muted);
+    margin-top: 12px;
+  }
+  .rule-double {
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    height: 4px;
+    margin-bottom: 32px;
+  }
+
+  /* SUMMARY CARDS */
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border: 1px solid var(--ink);
+    margin-bottom: 40px;
+    background: var(--paper-warm);
+  }
+  .stat {
+    padding: 24px 28px;
+    border-right: 1px solid var(--rule);
+    position: relative;
+  }
+  .stat:last-child { border-right: none; }
+  .stat-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink-muted);
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 38px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variation-settings: 'opsz' 144;
+  }
+  .stat-value.accent { color: var(--accent); }
+  .stat-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 8px;
+  }
+
+  /* SECTION HEADER */
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 32px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .section-head h2 {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 28px;
+    letter-spacing: -0.01em;
+  }
+  .section-head .meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--ink-muted);
+  }
+
+  /* TOOLBAR */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .search {
+    flex: 1;
+    min-width: 240px;
+    background: transparent;
+    border: 1px solid var(--ink);
+    padding: 10px 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink);
+    outline: none;
+  }
+  .search::placeholder { color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .search:focus { background: var(--paper-warm); }
+  .toolbar-info {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-soft);
+  }
+
+  /* TABLE */
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--ink);
+    background: var(--paper-warm);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    min-width: 1500px;
+  }
+  thead { background: var(--ink); color: var(--paper); }
+  th {
+    text-align: right;
+    padding: 14px 12px;
+    font-weight: 500;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    border-right: 1px solid rgba(244, 237, 224, 0.15);
+    transition: background 0.15s;
+  }
+  th:first-child { text-align: left; }
+  th:last-child { border-right: none; }
+  th:hover { background: rgba(255,255,255,0.08); }
+  th .sort-ind { opacity: 0.4; margin-left: 4px; font-size: 9px; }
+  th.sort-asc .sort-ind, th.sort-desc .sort-ind { opacity: 1; color: var(--warn); }
+
+  tbody tr {
+    border-bottom: 1px solid var(--rule);
+    transition: background 0.15s;
+  }
+  tbody tr:hover { background: rgba(176, 58, 46, 0.04); }
+  tbody tr:last-child { border-bottom: none; }
+  td {
+    padding: 14px 12px;
+    text-align: right;
+    border-right: 1px solid var(--rule);
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  td:first-child {
+    text-align: left;
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 14px;
+    letter-spacing: -0.005em;
+  }
+  td:last-child { border-right: none; }
+  td.num { font-variant-numeric: tabular-nums; }
+  td.na { color: var(--ink-muted); font-style: italic; }
+
+  /* CELL HIGHLIGHTS */
+  td.flag-bad { background: var(--bad-soft); color: var(--bad); font-weight: 700; }
+  td.flag-warn { background: var(--warn-soft); color: #6b5410; font-weight: 600; }
+  td.flag-good { background: var(--good-soft); color: var(--good); font-weight: 600; }
+
+  .delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .delta::before {
+    font-size: 10px;
+  }
+  .delta.up { color: var(--bad); }
+  .delta.up::before { content: '▲'; }
+  .delta.down { color: var(--good); }
+  .delta.down::before { content: '▼'; }
+  .delta.flat { color: var(--ink-muted); }
+  .delta.flat::before { content: '—'; }
+
+  /* FOOTER */
+  footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 2px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--ink-muted);
+  }
+  footer .ornament {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 18px;
+    color: var(--accent);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /* LOADING */
+  .loading, .error {
+    padding: 80px 40px;
+    text-align: center;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 22px;
+    color: var(--ink-muted);
+  }
+  .error { color: var(--accent); }
+
+  @media (max-width: 900px) {
+    .summary { grid-template-columns: repeat(2, 1fr); }
+    .stat:nth-child(2) { border-right: none; }
+    .stat:nth-child(1), .stat:nth-child(2) { border-bottom: 1px solid var(--rule); }
+    .masthead { grid-template-columns: 1fr; text-align: center; }
+    .masthead-left, .masthead-right { text-align: center; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="masthead">
+    <div class="masthead-left">
+      Vol. I &middot; No. <span id="issue-no">001</span><br>
+      Internal Distribution
+    </div>
+    <div class="masthead-center">
+      <div class="masthead-title">The <em>Fault</em> Ledger</div>
+      <div class="masthead-sub">Product Quality &middot; Monthly Reporting</div>
+    </div>
+    <div class="masthead-right">
+      Published<br>
+      <span id="pub-date">—</span>
+    </div>
+  </header>
+  <div class="rule-double"></div>
+
+  <section class="summary" id="summary">
+    <div class="stat">
+      <div class="stat-label">SKUs Tracked</div>
+      <div class="stat-value" id="stat-skus">—</div>
+      <div class="stat-meta">Active in reporting period</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Issues This Month</div>
+      <div class="stat-value accent" id="stat-issues">—</div>
+      <div class="stat-meta" id="stat-issues-delta">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Replacements</div>
+      <div class="stat-value" id="stat-replacements">—</div>
+      <div class="stat-meta" id="stat-replacement-cost">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Lifetime Cost</div>
+      <div class="stat-value" id="stat-lifetime-cost">—</div>
+      <div class="stat-meta">Cumulative replacements</div>
+    </div>
+  </section>
+
+  <div class="section-head">
+    <h2>By the Numbers</h2>
+    <div class="meta">Per SKU &middot; Sorted by current month issue rate</div>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" class="search" id="search" placeholder="Filter by SKU…" />
+    <div class="toolbar-info" id="row-count">— rows</div>
+  </div>
+
+  <div class="table-wrap">
+    <div id="table-target">
+      <div class="loading">Loading the latest figures…</div>
+    </div>
+  </div>
+
+  <footer>
+    <div>Source: Zendesk &middot; Phocas &middot; Updated monthly via Zapier</div>
+    <div class="ornament">— fin —</div>
+    <div id="last-update">—</div>
+  </footer>
+</div>
+
+<script>
+  // ============================================================
+  // CONFIG — point this at your raw GitHub JSON
+  // ============================================================
+  // For GitHub Pages, the same-repo relative path works fine:
+  const DATA_URL = 'data/dashboard.json';
+  // If hosting elsewhere or testing, use:
+  // const DATA_URL = 'https://raw.githubusercontent.com/<user>/<repo>/main/data/dashboard.json';
+
+  // Cache-bust query so updated JSON isn't stuck behind a CDN cache
+  const fetchURL = DATA_URL + '?t=' + Date.now();
+
+  let DATA = null;
+  let sortKey = 'issues_pct_current_month';
+  let sortDir = 'desc';
+
+  const COLUMNS = [
+    { key: 'sku',                              label: 'SKU',                       type: 'text' },
+    { key: 'issues_3mo_ago',                   label: 'Issues 3mo Ago',            type: 'int' },
+    { key: 'issues_last_month',                label: 'Issues Last Month',         type: 'int' },
+    { key: 'issues_current_month',             label: 'Issues Current',            type: 'int', highlight: 'current' },
+    { key: 'issues_pct_3mo_ago',               label: 'Issues % 3mo Ago',          type: 'pct' },
+    { key: 'issues_pct_last_month',            label: 'Issues % Last',             type: 'pct' },
+    { key: 'issues_pct_current_month',         label: 'Issues % Current',          type: 'pct', highlight: 'rate' },
+    { key: 'change_mom',                       label: 'Δ MoM',                     type: 'delta' },
+    { key: 'issues_lifetime',                  label: 'Issues Lifetime',           type: 'int' },
+    { key: 'sales_lifetime',                   label: 'Sales Lifetime',            type: 'int' },
+    { key: 'issues_vs_sales_lifetime',         label: 'Issues vs Sales',           type: 'pct', highlight: 'rate' },
+    { key: 'cog',                              label: 'COG',                       type: 'money' },
+    { key: 'total_replacements_month',         label: 'Replacements (Month)',      type: 'int' },
+    { key: 'total_cost_replacements_month',    label: 'Cost (Month)',              type: 'money' },
+    { key: 'total_cost_replacements_lifetime', label: 'Cost (Lifetime)',           type: 'money' },
+  ];
+
+  // Format helpers
+  const fmtInt   = v => (v == null ? '—' : v.toLocaleString('en-US'));
+  const fmtMoney = v => (v == null ? '#N/A' : '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+  const fmtPct   = v => (v == null ? '—' : (v * 100).toFixed(2) + '%');
+  const fmtDelta = v => {
+    if (v == null) return '<span class="delta flat">—</span>';
+    const cls = v > 0.0005 ? 'up' : v < -0.0005 ? 'down' : 'flat';
+    return `<span class="delta ${cls}">${(v * 100).toFixed(2)}%</span>`;
+  };
+
+  // Highlight thresholds — issue rate columns
+  function rateClass(v) {
+    if (v == null) return '';
+    if (v >= 0.10) return 'flag-bad';   // ≥10% issue rate
+    if (v >= 0.03) return 'flag-warn';  // 3–10%
+    return '';
+  }
+  function currentIssueClass(v, prev) {
+    if (v == null || prev == null) return '';
+    if (v > prev * 1.25) return 'flag-bad';
+    if (v > prev) return 'flag-warn';
+    if (v < prev * 0.75) return 'flag-good';
+    return '';
+  }
+
+  async function load() {
+    try {
+      const r = await fetch(fetchURL, { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      DATA = await r.json();
+      hydrate();
+    } catch (e) {
+      document.getElementById('table-target').innerHTML =
+        `<div class="error">Could not load data.<br><small style="font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase">${e.message}</small></div>`;
+    }
+  }
+
+  function hydrate() {
+    // Masthead dates
+    const pub = new Date(DATA.generated_at);
+    document.getElementById('pub-date').textContent =
+      pub.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    document.getElementById('last-update').textContent = 'Last update: ' + pub.toISOString().slice(0, 10);
+
+    // Summary stats
+    const skus = DATA.skus;
+    const totalIssues = skus.reduce((s, r) => s + (r.issues_current_month || 0), 0);
+    const totalLastMonth = skus.reduce((s, r) => s + (r.issues_last_month || 0), 0);
+    const totalReplacements = skus.reduce((s, r) => s + (r.total_replacements_month || 0), 0);
+    const totalCostMonth = skus.reduce((s, r) => s + (r.total_cost_replacements_month || 0), 0);
+    const totalCostLifetime = skus.reduce((s, r) => s + (r.total_cost_replacements_lifetime || 0), 0);
+
+    document.getElementById('stat-skus').textContent = skus.length;
+    document.getElementById('stat-issues').textContent = totalIssues.toLocaleString();
+
+    const diff = totalIssues - totalLastMonth;
+    const pctDiff = totalLastMonth ? (diff / totalLastMonth * 100) : 0;
+    const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '—';
+    document.getElementById('stat-issues-delta').innerHTML =
+      `${arrow} ${Math.abs(diff)} (${pctDiff >= 0 ? '+' : ''}${pctDiff.toFixed(1)}%) vs last month`;
+
+    document.getElementById('stat-replacements').textContent = totalReplacements.toLocaleString();
+    document.getElementById('stat-replacement-cost').textContent = fmtMoney(totalCostMonth) + ' this month';
+    document.getElementById('stat-lifetime-cost').textContent = fmtMoney(totalCostLifetime);
+
+    renderTable();
+  }
+
+  function renderTable() {
+    const filter = document.getElementById('search').value.trim().toLowerCase();
+    let rows = DATA.skus.filter(r => !filter || r.sku.toLowerCase().includes(filter));
+
+    rows.sort((a, b) => {
+      const x = a[sortKey], y = b[sortKey];
+      if (x == null && y == null) return 0;
+      if (x == null) return 1;
+      if (y == null) return -1;
+      if (typeof x === 'string') return sortDir === 'asc' ? x.localeCompare(y) : y.localeCompare(x);
+      return sortDir === 'asc' ? x - y : y - x;
+    });
+
+    let html = '<table><thead><tr>';
+    COLUMNS.forEach(c => {
+      const sortCls = c.key === sortKey ? (sortDir === 'asc' ? 'sort-asc' : 'sort-desc') : '';
+      const ind = c.key === sortKey ? (sortDir === 'asc' ? '↑' : '↓') : '↕';
+      html += `<th class="${sortCls}" data-key="${c.key}">${c.label}<span class="sort-ind">${ind}</span></th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    rows.forEach(r => {
+      html += '<tr>';
+      COLUMNS.forEach(c => {
+        const v = r[c.key];
+        let cell = '', cls = 'num';
+
+        if (c.type === 'text') {
+          cell = v;
+          cls = '';
+        } else if (v == null) {
+          cell = c.type === 'money' ? '#N/A' : '—';
+          cls += ' na';
+        } else if (c.type === 'int')   cell = fmtInt(v);
+        else if (c.type === 'money')   cell = fmtMoney(v);
+        else if (c.type === 'pct')     cell = fmtPct(v);
+        else if (c.type === 'delta')   cell = fmtDelta(v);
+
+        // Highlights
+        if (c.highlight === 'rate') cls += ' ' + rateClass(v);
+        if (c.highlight === 'current') cls += ' ' + currentIssueClass(v, r.issues_last_month);
+
+        html += `<td class="${cls.trim()}">${cell}</td>`;
+      });
+      html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('table-target').innerHTML = html;
+    document.getElementById('row-count').textContent = `${rows.length} row${rows.length === 1 ? '' : 's'}`;
+
+    // Bind sort
+    document.querySelectorAll('th[data-key]').forEach(th => {
+      th.addEventListener('click', () => {
+        const k = th.dataset.key;
+        if (sortKey === k) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+        else { sortKey = k; sortDir = k === 'sku' ? 'asc' : 'desc'; }
+        renderTable();
+      });
+    });
+  }
+
+  document.getElementById('search').addEventListener('input', () => renderTable());
+
+  load();
+</script>
+</body>
+</html>
