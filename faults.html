@@ -106,7 +106,7 @@
     padding: 20px 24px;
     margin-bottom: 32px;
     display: grid;
-    grid-template-columns: auto auto 1fr auto;
+    grid-template-columns: auto auto auto 1fr auto;
     gap: 24px;
     align-items: end;
   }
@@ -127,7 +127,7 @@
     gap: 8px;
     align-items: center;
   }
-  .control select, .control input[type="month"] {
+  .control select, .control input[type="month"], .control input[type="number"] {
     background: var(--paper);
     border: 1px solid var(--ink);
     padding: 8px 12px;
@@ -137,10 +137,20 @@
     outline: none;
     cursor: pointer;
   }
+  .control input[type="number"] { width: 80px; cursor: text; }
   .control select:focus, .control input:focus {
     background: var(--paper-warm);
     box-shadow: inset 0 0 0 1px var(--accent);
   }
+  .control-hint {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-muted);
+    white-space: nowrap;
+  }
+  .control-hint.active { color: var(--accent); }
   .preset-btn {
     background: transparent;
     border: 1px solid var(--ink);
@@ -367,7 +377,7 @@
   }
   .error { color: var(--accent); }
 
-  @media (max-width: 1000px) {
+  @media (max-width: 1100px) {
     .summary { grid-template-columns: repeat(2, 1fr); }
     .stat:nth-child(2) { border-right: none; }
     .stat:nth-child(1), .stat:nth-child(2) { border-bottom: 1px solid var(--rule); }
@@ -414,6 +424,13 @@
         <button class="preset-btn" data-preset="all">All</button>
       </div>
     </div>
+    <div class="control control-group">
+      <div class="control-label">Min lifetime issues</div>
+      <div class="control-row">
+        <input type="number" id="min-issues" min="0" step="10" value="50" />
+        <span class="control-hint" id="min-issues-hint">hidden unless searched</span>
+      </div>
+    </div>
     <div></div>
     <div class="control control-group" style="text-align:right">
       <div class="control-label">Window</div>
@@ -423,9 +440,9 @@
 
   <section class="summary" id="summary">
     <div class="stat">
-      <div class="stat-label">SKUs (Active)</div>
+      <div class="stat-label">SKUs Shown</div>
       <div class="stat-value" id="stat-skus">—</div>
-      <div class="stat-meta">In selected window</div>
+      <div class="stat-meta" id="stat-skus-meta">In selected window</div>
     </div>
     <div class="stat">
       <div class="stat-label">Issues, Current Month</div>
@@ -652,9 +669,30 @@
       });
     });
 
-    document.getElementById('search').addEventListener('input', renderTable);
+    document.getElementById('search').addEventListener('input', () => {
+      updateMinIssuesHint();
+      renderSummary();
+      renderTable();
+    });
+    document.getElementById('min-issues').addEventListener('input', () => {
+      renderSummary();
+      renderTable();
+    });
     document.getElementById('controls').style.display = 'grid';
+    updateMinIssuesHint();
     rerender();
+  }
+
+  function updateMinIssuesHint() {
+    const hint = document.getElementById('min-issues-hint');
+    const searchActive = document.getElementById('search').value.trim().length > 0;
+    if (searchActive) {
+      hint.textContent = 'bypassed by search';
+      hint.classList.add('active');
+    } else {
+      hint.textContent = 'hidden unless searched';
+      hint.classList.remove('active');
+    }
   }
 
   function setActivePreset(p) {
@@ -674,28 +712,59 @@
   }
 
   function activeRows() {
+    // First: SKUs with any activity in the window OR meaningful lifetime data.
+    // This is the "candidate pool" before user filters.
     return DATA.skus
       .map(s => computeRow(s, rangeStartIdx, rangeEndIdx))
       .filter(r => r.issues_window_total > 0 || r.total_replacements_window > 0 || (r.sales_lifetime > 0 && r.issues_lifetime > 0));
   }
 
+  function getMinIssues() {
+    const v = parseInt(document.getElementById('min-issues').value, 10);
+    return isFinite(v) && v >= 0 ? v : 0;
+  }
+
+  // Apply user-facing filters (search + threshold). Search bypasses threshold.
+  function visibleRows() {
+    const filter = document.getElementById('search').value.trim().toLowerCase();
+    const threshold = getMinIssues();
+    const all = activeRows();
+    if (filter) {
+      // Search is active — bypass threshold entirely
+      return { rows: all.filter(r => r.sku.toLowerCase().includes(filter)), totalCandidates: all.length, threshold, searchActive: true };
+    }
+    const filtered = threshold > 0 ? all.filter(r => (r.issues_lifetime || 0) >= threshold) : all;
+    return { rows: filtered, totalCandidates: all.length, threshold, searchActive: false };
+  }
+
   function renderSummary() {
-    const rows = activeRows();
+    const { rows, totalCandidates, threshold, searchActive } = visibleRows();
     const totalIssues = rows.reduce((s, r) => s + (r.issues_current_month || 0), 0);
     const lastMoIssues = rows.reduce((s, r) => s + (r.issues_last_month || 0), 0);
     const winReps = rows.reduce((s, r) => s + (r.total_replacements_window || 0), 0);
     const lifeCost = rows.reduce((s, r) => s + (r.total_cost_replacements_lifetime || 0), 0);
 
-    // Window replacement cost
+    // Window replacement cost — only count SKUs that are visible
+    const visibleSet = new Set(rows.map(r => r.sku));
     let winCost = 0;
     DATA.skus.forEach(s => {
-      if (s.cog == null) return;
+      if (s.cog == null || !visibleSet.has(s.sku)) return;
       for (let i = rangeStartIdx; i <= rangeEndIdx; i++) {
         winCost += (s.replacements[i] || 0) * s.cog;
       }
     });
 
-    document.getElementById('stat-skus').textContent = rows.length;
+    // SKU count label — show "X of Y" if threshold is hiding some
+    const skuEl = document.getElementById('stat-skus');
+    const skuMeta = document.getElementById('stat-skus-meta');
+    if (!searchActive && threshold > 0 && rows.length < totalCandidates) {
+      skuEl.innerHTML = `${rows.length.toLocaleString()} <span style="font-size:18px;color:var(--ink-muted);font-weight:400">/ ${totalCandidates.toLocaleString()}</span>`;
+      skuMeta.textContent = `${totalCandidates - rows.length} hidden by threshold`;
+    } else {
+      skuEl.textContent = rows.length.toLocaleString();
+      skuMeta.textContent = searchActive ? 'Matching search' : 'In selected window';
+    }
+
     document.getElementById('stat-issues').textContent = totalIssues.toLocaleString();
     const diff = totalIssues - lastMoIssues;
     const pctDiff = lastMoIssues ? (diff / lastMoIssues * 100) : 0;
@@ -708,9 +777,7 @@
   }
 
   function renderTable() {
-    const filter = document.getElementById('search').value.trim().toLowerCase();
-    let rows = activeRows();
-    if (filter) rows = rows.filter(r => r.sku.toLowerCase().includes(filter));
+    const { rows, totalCandidates, threshold, searchActive } = visibleRows();
 
     rows.sort((a, b) => {
       const x = a[sortKey], y = b[sortKey];
@@ -756,7 +823,15 @@
     });
     html += '</tbody></table>';
     document.getElementById('table-target').innerHTML = html;
-    document.getElementById('row-count').textContent = `${rows.length.toLocaleString()} row${rows.length === 1 ? '' : 's'}`;
+    const rc = document.getElementById('row-count');
+    if (!searchActive && threshold > 0 && rows.length < totalCandidates) {
+      const hidden = totalCandidates - rows.length;
+      rc.textContent = `${rows.length.toLocaleString()} shown · ${hidden.toLocaleString()} hidden (< ${threshold} lifetime issues)`;
+    } else if (searchActive) {
+      rc.textContent = `${rows.length.toLocaleString()} match${rows.length === 1 ? '' : 'es'}`;
+    } else {
+      rc.textContent = `${rows.length.toLocaleString()} row${rows.length === 1 ? '' : 's'}`;
+    }
 
     document.querySelectorAll('th[data-key]').forEach(th => {
       th.addEventListener('click', () => {
