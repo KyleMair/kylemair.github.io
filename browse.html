@@ -9,32 +9,37 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Archivo:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ql-red: #E4002B;
-    --ql-red-dark: #B80022;
-    --ql-red-soft: #FFE5EA;
-    --ql-black: #0A0A0A;
+    /* Quad Lock palette — DARK MODE */
+    --ql-red: #FF3D5A;
+    --ql-red-bold: #E4002B;
+    --ql-red-dark: #8B0019;
+    --ql-red-soft: rgba(255, 61, 90, 0.15);
+
+    --ql-black: #0E0E0E;
     --ql-grey-900: #1A1A1A;
-    --ql-grey-700: #4A4A4A;
-    --ql-grey-500: #7A7A7A;
-    --ql-grey-300: #C8C8C8;
-    --ql-grey-200: #E5E5E5;
-    --ql-grey-100: #F2F2F2;
-    --ql-grey-50: #FAFAFA;
-    --ql-white: #FFFFFF;
+    --ql-grey-800: #222222;
+    --ql-grey-700: #2E2E2E;
+    --ql-grey-500: #6A6A6A;
+    --ql-grey-400: #8E8E8E;
+    --ql-grey-300: #3A3A3A;
+    --ql-grey-200: #2A2A2A;
+    --ql-grey-100: #1F1F1F;
+    --ql-grey-50: #161616;
+    --ql-white: #F5F5F5;
 
-    --bg: var(--ql-white);
+    --bg: var(--ql-black);
     --surface: var(--ql-grey-50);
-    --ink: var(--ql-black);
-    --ink-soft: var(--ql-grey-700);
+    --ink: var(--ql-white);
+    --ink-soft: #BEBEBE;
     --ink-muted: var(--ql-grey-500);
-    --rule: var(--ql-grey-200);
+    --rule: var(--ql-grey-300);
     --accent: var(--ql-red);
-    --good: #00875A;
+    --good: #4ADE80;
 
-    /* Metric colors — used sparingly to distinguish the three tables */
-    --c-issues: var(--ql-red);
-    --c-sales: #00875A;
-    --c-reps: #FF8B00;
+    /* Metric colors for the chart and table indicators — brighter on dark */
+    --c-issues: #FF3D5A;
+    --c-sales: #4ADE80;
+    --c-reps: #FFB547;
 
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-display: 'Archivo', 'Inter', sans-serif;
@@ -49,6 +54,7 @@
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    color-scheme: dark;
   }
   .container { max-width: 1600px; margin: 0 auto; padding: 40px 32px 80px; }
 
@@ -64,9 +70,9 @@
   .brand { display: flex; align-items: center; gap: 14px; }
   .brand-mark {
     width: 32px; height: 32px;
-    background: var(--ql-red);
+    background: var(--ql-red-bold);
     display: flex; align-items: center; justify-content: center;
-    color: var(--ql-white);
+    color: #FFFFFF;
     font-family: var(--font-display);
     font-weight: 900;
     font-size: 16px;
@@ -147,7 +153,7 @@
   .control-row { display: flex; gap: 6px; align-items: center; }
   .control input[type="text"],
   .control input[type="month"] {
-    background: var(--ql-white);
+    background: var(--surface);
     border: 1px solid var(--ql-grey-300);
     padding: 10px 14px;
     font-family: var(--font-sans);
@@ -168,7 +174,7 @@
     box-shadow: 0 0 0 2px var(--ql-red-soft);
   }
   .preset-btn {
-    background: var(--ql-white);
+    background: var(--surface);
     border: 1px solid var(--ql-grey-300);
     padding: 8px 14px;
     font-family: var(--font-sans);
@@ -182,7 +188,7 @@
   .preset-btn.active {
     background: var(--ink);
     border-color: var(--ink);
-    color: var(--ql-white);
+    color: var(--bg);
   }
   .control-sep {
     color: var(--ink-muted);
@@ -195,7 +201,7 @@
     display: flex;
     margin-bottom: 32px;
     border: 1px solid var(--rule);
-    background: var(--ql-white);
+    background: var(--surface);
   }
   .mode-btn {
     flex: 1;
@@ -212,10 +218,10 @@
     text-align: left;
   }
   .mode-btn:last-child { border-right: none; }
-  .mode-btn:hover { background: var(--ql-grey-50); color: var(--ink); }
+  .mode-btn:hover { background: var(--ql-grey-100); color: var(--ink); }
   .mode-btn.active {
     background: var(--ink);
-    color: var(--ql-white);
+    color: var(--bg);
   }
   .mode-btn-sub {
     display: block;
@@ -232,8 +238,8 @@
   .context {
     margin-bottom: 24px;
     padding: 18px 24px;
-    background: var(--ink);
-    color: var(--ql-white);
+    background: var(--ql-grey-800);
+    color: var(--ink);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -269,7 +275,7 @@
     text-decoration: none;
     transition: all 0.15s;
   }
-  .clear-link:hover { background: var(--ql-white); color: var(--ink); }
+  .clear-link:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 
   /* SECTION */
   .section { margin-bottom: 40px; }
@@ -303,7 +309,7 @@
   .section-head h2.reps .indicator { background: var(--c-reps); }
   .section-head .actions { display: flex; gap: 12px; align-items: center; }
   .copy-btn {
-    background: var(--ql-white);
+    background: var(--surface);
     border: 1px solid var(--ink);
     padding: 7px 14px;
     font-family: var(--font-sans);
@@ -315,10 +321,10 @@
     color: var(--ink);
     transition: all 0.12s;
   }
-  .copy-btn:hover { background: var(--ink); color: var(--ql-white); }
+  .copy-btn:hover { background: var(--ink); color: var(--bg); }
   .copy-btn.copied {
     background: var(--good);
-    color: var(--ql-white);
+    color: #0E0E0E;
     border-color: var(--good);
   }
   .section-meta {
@@ -332,14 +338,14 @@
   .table-wrap {
     overflow-x: auto;
     border: 1px solid var(--rule);
-    background: var(--ql-white);
+    background: var(--surface);
     max-height: 60vh;
     overflow-y: auto;
   }
   table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 12px; }
   thead {
-    background: var(--ink);
-    color: var(--ql-white);
+    background: var(--ql-grey-900);
+    color: var(--ink);
     position: sticky;
     top: 0;
     z-index: 2;
@@ -360,7 +366,7 @@
   }
   th:first-child { text-align: left; }
   th:last-child { border-right: none; }
-  th:hover { background: var(--ql-grey-900); }
+  th:hover { background: var(--ql-grey-700); }
   th .sort-ind { opacity: 0.4; margin-left: 4px; font-size: 9px; }
   th.sort-asc .sort-ind, th.sort-desc .sort-ind { opacity: 1; color: var(--accent); }
   tbody tr {
@@ -368,7 +374,7 @@
     transition: background 0.12s;
     cursor: pointer;
   }
-  tbody tr:hover { background: var(--ql-grey-50); }
+  tbody tr:hover { background: var(--ql-grey-100); }
   tbody tr.no-hover { cursor: default; }
   tbody tr.no-hover:hover { background: transparent; }
   td {
@@ -407,7 +413,7 @@
   /* CHART */
   .chart-section {
     margin-bottom: 40px;
-    background: var(--ql-white);
+    background: var(--surface);
     border: 1px solid var(--rule);
   }
   .chart-head {
@@ -482,7 +488,7 @@
   /* CSV download button (more prominent than Copy TSV) */
   .download-btn {
     background: var(--ink);
-    color: var(--ql-white);
+    color: var(--bg);
     border: 1px solid var(--ink);
     padding: 8px 14px;
     font-family: var(--font-sans);
@@ -493,8 +499,8 @@
     cursor: pointer;
     transition: all 0.12s;
   }
-  .download-btn:hover { background: var(--accent); border-color: var(--accent); }
-  .download-btn.done { background: var(--good); border-color: var(--good); }
+  .download-btn:hover { background: var(--accent); border-color: var(--accent); color: #FFFFFF; }
+  .download-btn.done { background: var(--good); border-color: var(--good); color: #0E0E0E; }
 
   footer {
     margin-top: 64px;
