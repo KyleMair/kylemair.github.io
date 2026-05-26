@@ -9,34 +9,40 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Archivo:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* Quad Lock palette */
-    --ql-red: #E4002B;
-    --ql-red-dark: #B80022;
-    --ql-red-soft: #FFE5EA;
-    --ql-black: #0A0A0A;
-    --ql-grey-900: #1A1A1A;
-    --ql-grey-700: #4A4A4A;
-    --ql-grey-500: #7A7A7A;
-    --ql-grey-300: #C8C8C8;
-    --ql-grey-200: #E5E5E5;
-    --ql-grey-100: #F2F2F2;
-    --ql-grey-50: #FAFAFA;
-    --ql-white: #FFFFFF;
+    /* Quad Lock palette — DARK MODE */
+    --ql-red: #FF3D5A;          /* lifted from #E4002B for dark background contrast */
+    --ql-red-bold: #E4002B;     /* original brand red — used on logo mark + small accents */
+    --ql-red-dark: #8B0019;
+    --ql-red-soft: rgba(255, 61, 90, 0.15);
+
+    --ql-black: #0E0E0E;        /* page background */
+    --ql-grey-900: #1A1A1A;     /* table header bg */
+    --ql-grey-800: #222222;     /* card / surface */
+    --ql-grey-700: #2E2E2E;     /* hover, raised surface */
+    --ql-grey-500: #6A6A6A;     /* muted text */
+    --ql-grey-400: #8E8E8E;     /* secondary text */
+    --ql-grey-300: #3A3A3A;     /* rule lines, borders */
+    --ql-grey-200: #2A2A2A;     /* subtle bg / soft fill */
+    --ql-grey-100: #1F1F1F;
+    --ql-grey-50: #161616;      /* slightly raised surface */
+    --ql-white: #F5F5F5;        /* primary text */
 
     /* Semantic */
-    --bg: var(--ql-white);
+    --bg: var(--ql-black);
     --surface: var(--ql-grey-50);
-    --ink: var(--ql-black);
-    --ink-soft: var(--ql-grey-700);
+    --ink: var(--ql-white);
+    --ink-soft: #BEBEBE;
     --ink-muted: var(--ql-grey-500);
-    --rule: var(--ql-grey-200);
+    --rule: var(--ql-grey-300);
     --accent: var(--ql-red);
-    --good: #00875A;
-    --good-soft: #DCFFEF;
-    --warn: #FF8B00;
-    --warn-soft: #FFF0DA;
+
+    /* Highlight colours retuned for dark backgrounds — brighter, more saturated */
+    --good: #4ADE80;
+    --good-soft: rgba(74, 222, 128, 0.18);
+    --warn: #FFB547;
+    --warn-soft: rgba(255, 181, 71, 0.18);
     --bad: var(--ql-red);
-    --bad-soft: var(--ql-red-soft);
+    --bad-soft: rgba(255, 61, 90, 0.18);
 
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-display: 'Archivo', 'Inter', sans-serif;
@@ -51,6 +57,7 @@
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    color-scheme: dark;
   }
   .container {
     max-width: 1600px;
@@ -75,11 +82,11 @@
   .brand-mark {
     width: 32px;
     height: 32px;
-    background: var(--ql-red);
+    background: var(--ql-red-bold);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--ql-white);
+    color: #FFFFFF;
     font-family: var(--font-display);
     font-weight: 900;
     font-size: 16px;
@@ -172,7 +179,7 @@
   .control select,
   .control input[type="month"],
   .control input[type="number"] {
-    background: var(--ql-white);
+    background: var(--surface);
     border: 1px solid var(--ql-grey-300);
     padding: 8px 12px;
     font-family: var(--font-mono);
@@ -197,7 +204,7 @@
   }
   .control-hint.active { color: var(--accent); }
   .preset-btn {
-    background: var(--ql-white);
+    background: var(--surface);
     border: 1px solid var(--ql-grey-300);
     padding: 8px 14px;
     font-family: var(--font-sans);
@@ -211,7 +218,7 @@
   .preset-btn.active {
     background: var(--ink);
     border-color: var(--ink);
-    color: var(--ql-white);
+    color: var(--bg);
   }
   .control-sep {
     color: var(--ink-muted);
@@ -231,7 +238,7 @@
   }
   .stat {
     padding: 20px 24px;
-    background: var(--ql-white);
+    background: var(--surface);
   }
   .stat-label {
     font-family: var(--font-mono);
@@ -300,7 +307,7 @@
   }
   .search {
     flex: 1;
-    background: var(--ql-white);
+    background: var(--surface);
     border: 1px solid var(--ql-grey-300);
     padding: 10px 36px 10px 14px;
     font-family: var(--font-sans);
@@ -337,7 +344,7 @@
   }
   .search-clear:hover {
     background: var(--ink);
-    color: var(--ql-white);
+    color: var(--bg);
   }
   .search-clear.visible { display: flex; }
   .toolbar-info {
@@ -351,7 +358,7 @@
   .table-wrap {
     overflow-x: auto;
     border: 1px solid var(--rule);
-    background: var(--ql-white);
+    background: var(--surface);
     max-height: 70vh;
     overflow-y: auto;
   }
@@ -363,8 +370,8 @@
     min-width: 1500px;
   }
   thead {
-    background: var(--ink);
-    color: var(--ql-white);
+    background: var(--ql-grey-900);
+    color: var(--ink);
     position: sticky;
     top: 0;
     z-index: 2;
@@ -385,7 +392,7 @@
   }
   th:first-child { text-align: left; }
   th:last-child { border-right: none; }
-  th:hover { background: var(--ql-grey-900); }
+  th:hover { background: var(--ql-grey-700); }
   th .sort-ind { opacity: 0.4; margin-left: 4px; font-size: 9px; }
   th.sort-asc .sort-ind, th.sort-desc .sort-ind { opacity: 1; color: var(--accent); }
 
@@ -393,7 +400,7 @@
     border-bottom: 1px solid var(--rule);
     transition: background 0.12s;
   }
-  tbody tr:hover { background: var(--ql-grey-50); }
+  tbody tr:hover { background: var(--ql-grey-100); }
   tbody tr:last-child { border-bottom: none; }
   td {
     padding: 11px 12px;
@@ -414,7 +421,7 @@
   td.na { color: var(--ink-muted); }
 
   td.flag-bad { background: var(--bad-soft); color: var(--bad); font-weight: 700; }
-  td.flag-warn { background: var(--warn-soft); color: #8B4A00; font-weight: 600; }
+  td.flag-warn { background: var(--warn-soft); color: var(--warn); font-weight: 600; }
   td.flag-good { background: var(--good-soft); color: var(--good); font-weight: 600; }
 
   .delta { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
