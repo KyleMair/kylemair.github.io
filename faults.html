@@ -292,20 +292,54 @@
     margin-bottom: 12px;
     flex-wrap: wrap;
   }
-  .search {
+  .search-wrap {
     flex: 1;
     min-width: 240px;
+    position: relative;
+    display: flex;
+  }
+  .search {
+    flex: 1;
     background: var(--ql-white);
     border: 1px solid var(--ql-grey-300);
-    padding: 10px 14px;
+    padding: 10px 36px 10px 14px;
     font-family: var(--font-sans);
     font-size: 13px;
     color: var(--ink);
     outline: none;
     transition: border-color 0.15s;
+    width: 100%;
   }
   .search::placeholder { color: var(--ink-muted); }
   .search:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--ql-red-soft); }
+  /* hide the native WebKit clear button — we render our own */
+  .search::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+  .search-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: var(--ql-grey-200);
+    color: var(--ink-soft);
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1;
+    transition: background 0.12s, color 0.12s;
+  }
+  .search-clear:hover {
+    background: var(--ink);
+    color: var(--ql-white);
+  }
+  .search-clear.visible { display: flex; }
   .toolbar-info {
     font-family: var(--font-mono);
     font-size: 11px;
@@ -503,7 +537,10 @@
   </div>
 
   <div class="toolbar">
-    <input type="text" class="search" id="search" placeholder="Filter by SKU…" />
+    <div class="search-wrap">
+      <input type="text" class="search" id="search" placeholder="Filter by SKU…" />
+      <button class="search-clear" id="search-clear" type="button" aria-label="Clear search" title="Clear search">×</button>
+    </div>
     <div class="toolbar-info" id="row-count">— rows</div>
   </div>
 
@@ -703,6 +740,22 @@
 
     document.getElementById('search').addEventListener('input', () => {
       updateMinIssuesHint();
+      updateSearchClear();
+      renderSummary();
+      renderTable();
+    });
+    document.getElementById('search').addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && e.target.value) {
+        e.preventDefault();
+        document.getElementById('search-clear').click();
+      }
+    });
+    document.getElementById('search-clear').addEventListener('click', () => {
+      const s = document.getElementById('search');
+      s.value = '';
+      s.focus();
+      updateMinIssuesHint();
+      updateSearchClear();
       renderSummary();
       renderTable();
     });
@@ -712,7 +765,13 @@
     });
     document.getElementById('controls').style.display = 'grid';
     updateMinIssuesHint();
+    updateSearchClear();
     rerender();
+  }
+
+  function updateSearchClear() {
+    const hasText = document.getElementById('search').value.length > 0;
+    document.getElementById('search-clear').classList.toggle('visible', hasText);
   }
 
   function updateMinIssuesHint() {
