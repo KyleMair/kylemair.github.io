@@ -1029,7 +1029,13 @@
   // ============================================================
   // CSV DOWNLOAD — all three metrics for the selected SKU + range, single file.
   // Header comments include lifetime totals so the per-month numbers have context.
-  // CSV-correct quoting in case a SKU ever contains a comma or quote.
+  //
+  // CSV correctness notes:
+  // - No thousands separators (no commas) in numeric values, even in comments.
+  //   Excel splits `5,345` across two cells because comma is the CSV separator.
+  // - UTF-8 BOM (\uFEFF) prepended so Excel on macOS interprets the file as
+  //   UTF-8 instead of Mac Roman (which mangles em-dashes into ",Äî").
+  // - Em-dash kept in human-readable header; the BOM handles encoding.
   // ============================================================
   function downloadCsv(btn, sku, monthRows) {
     const esc = v => {
@@ -1048,12 +1054,15 @@
       ? `${monthRows[0].month}_to_${monthRows[monthRows.length-1].month}`
       : 'empty';
     const lines = [];
+    // Comment lines describing the file. Wrap each in quotes so any commas
+    // (e.g. "1,234") still land in column A in Excel rather than splitting.
+    // Even safer though: use raw numbers in comments to avoid the issue.
     lines.push(`# Quad Lock Fault Data — ${sku}`);
     lines.push(`# Selected range: ${monthRows[0].month} to ${monthRows[monthRows.length-1].month} (${monthRows.length} months)`);
     lines.push(`# Lifetime data span: ${lifetimeStart} to ${lifetimeEnd}`);
-    lines.push(`# Lifetime issues:       ${lifetimeIss.toLocaleString()}`);
-    lines.push(`# Lifetime sales:        ${lifetimeSal.toLocaleString()}`);
-    lines.push(`# Lifetime replacements: ${lifetimeRep.toLocaleString()}`);
+    lines.push(`# Lifetime issues: ${lifetimeIss}`);
+    lines.push(`# Lifetime sales: ${lifetimeSal}`);
+    lines.push(`# Lifetime replacements: ${lifetimeRep}`);
     lines.push(`# Generated: ${new Date().toISOString()}`);
     lines.push(['SKU', 'Month', 'Issues', 'Sales', 'Replacements'].map(esc).join(','));
     let tIss = 0, tSal = 0, tRep = 0;
@@ -1063,9 +1072,9 @@
     });
     lines.push([sku, 'RANGE TOTAL', tIss, tSal, tRep].map(esc).join(','));
     lines.push([sku, 'LIFETIME TOTAL', lifetimeIss, lifetimeSal, lifetimeRep].map(esc).join(','));
-    const csv = lines.join('\n');
+    // Prepend UTF-8 BOM so Excel reads it correctly on macOS
+    const csv = '\uFEFF' + lines.join('\n');
 
-    // Use a real download via Blob — better UX than clipboard for a file the user wants to save
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
