@@ -1028,6 +1028,7 @@
 
   // ============================================================
   // CSV DOWNLOAD — all three metrics for the selected SKU + range, single file.
+  // Header comments include lifetime totals so the per-month numbers have context.
   // CSV-correct quoting in case a SKU ever contains a comma or quote.
   // ============================================================
   function downloadCsv(btn, sku, monthRows) {
@@ -1036,12 +1037,23 @@
       if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
       return s;
     };
+    const skuData = DATA.skus.find(s => s.sku === sku);
+    const lifetimeIss = skuData.issues.reduce((s, x) => s + x, 0);
+    const lifetimeSal = skuData.sales.reduce((s, x) => s + x, 0);
+    const lifetimeRep = skuData.replacements.reduce((s, x) => s + x, 0);
+    const lifetimeStart = DATA.months[0];
+    const lifetimeEnd = DATA.months[DATA.months.length - 1];
+
     const range = monthRows.length > 0
       ? `${monthRows[0].month}_to_${monthRows[monthRows.length-1].month}`
       : 'empty';
     const lines = [];
     lines.push(`# Quad Lock Fault Data — ${sku}`);
-    lines.push(`# Range: ${monthRows[0].month} to ${monthRows[monthRows.length-1].month} (${monthRows.length} months)`);
+    lines.push(`# Selected range: ${monthRows[0].month} to ${monthRows[monthRows.length-1].month} (${monthRows.length} months)`);
+    lines.push(`# Lifetime data span: ${lifetimeStart} to ${lifetimeEnd}`);
+    lines.push(`# Lifetime issues:       ${lifetimeIss.toLocaleString()}`);
+    lines.push(`# Lifetime sales:        ${lifetimeSal.toLocaleString()}`);
+    lines.push(`# Lifetime replacements: ${lifetimeRep.toLocaleString()}`);
     lines.push(`# Generated: ${new Date().toISOString()}`);
     lines.push(['SKU', 'Month', 'Issues', 'Sales', 'Replacements'].map(esc).join(','));
     let tIss = 0, tSal = 0, tRep = 0;
@@ -1049,7 +1061,8 @@
       lines.push([sku, r.month, r.issues, r.sales, r.replacements].map(esc).join(','));
       tIss += r.issues; tSal += r.sales; tRep += r.replacements;
     });
-    lines.push([sku, 'TOTAL', tIss, tSal, tRep].map(esc).join(','));
+    lines.push([sku, 'RANGE TOTAL', tIss, tSal, tRep].map(esc).join(','));
+    lines.push([sku, 'LIFETIME TOTAL', lifetimeIss, lifetimeSal, lifetimeRep].map(esc).join(','));
     const csv = lines.join('\n');
 
     // Use a real download via Blob — better UX than clipboard for a file the user wants to save
