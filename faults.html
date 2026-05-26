@@ -572,16 +572,36 @@
     const issues_current = at(issues, endIdx);
     const issues_last    = at(issues, endIdx - 1);
     const issues_3ago    = at(issues, endIdx - 2);
+    const sales_current  = at(sales, endIdx);
+    const sales_last     = at(sales, endIdx - 1);
 
     const lifetimeIssues = sum(issues);
     const lifetimeSales  = sum(sales);
     const lifetimeReps   = sum(reps);
 
+    // Issue rate at each reference point uses lifetime ratios as they stood AT
+    // THAT POINT IN TIME — i.e. both numerator and denominator are stripped of
+    // the months that hadn't happened yet. This is essential: a SKU with rising
+    // sales has a falling lifetime ratio even if issues stay flat, because the
+    // denominator grew. Holding lifetimeSales constant (the old approach) gave
+    // the wrong sign on MoM change for high-sales-growth SKUs.
+    //
+    //   pct_current  = lifetimeIssues / lifetimeSales
+    //   pct_last     = (lifetimeIssues - issues_current) / (lifetimeSales - sales_current)
+    //   pct_3ago     = (lifetimeIssues - issues_current - issues_last) /
+    //                  (lifetimeSales  - sales_current  - sales_last)
+    //
+    // Source: 'Monthly Breakdown Faults & Sale' columns Q, R, S, T plus E, F, G.
+    const issuesLastSnapshot  = lifetimeIssues - (issues_current || 0);
+    const salesLastSnapshot   = lifetimeSales  - (sales_current  || 0);
+    const issues3agoSnapshot  = lifetimeIssues - (issues_current || 0) - (issues_last || 0);
+    const sales3agoSnapshot   = lifetimeSales  - (sales_current  || 0) - (sales_last  || 0);
+
     const issues_pct_current = (lifetimeSales > 0) ? lifetimeIssues / lifetimeSales : null;
-    const issues_pct_last    = (lifetimeSales > 0 && issues_last != null)
-                               ? (lifetimeIssues - issues_last) / lifetimeSales : null;
-    const issues_pct_3ago    = (lifetimeSales > 0 && issues_3ago != null)
-                               ? (lifetimeIssues - issues_3ago) / lifetimeSales : null;
+    const issues_pct_last    = (salesLastSnapshot > 0 && issues_current != null)
+                               ? issuesLastSnapshot / salesLastSnapshot : null;
+    const issues_pct_3ago    = (sales3agoSnapshot > 0 && issues_current != null && issues_last != null)
+                               ? issues3agoSnapshot / sales3agoSnapshot : null;
     const change_mom = (issues_pct_current != null && issues_pct_last != null)
                        ? issues_pct_current - issues_pct_last : null;
     const issues_vs_sales_lifetime = (lifetimeSales > 0) ? lifetimeIssues / lifetimeSales : null;
